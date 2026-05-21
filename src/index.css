@@ -2,7 +2,7 @@
 
 :root{
   --light:#f0d9b5;
-  --dark:#b58863;
+  --dark:#ebb331;
 
   --bg:#2f2f34;
   --panel:#3a3a40;
@@ -110,7 +110,7 @@ body{
 .copy-btn{
   border:none;
 
-  background:#dcb35c;
+  background:#ebb331;
 
   color:#2b2b2b;
 
