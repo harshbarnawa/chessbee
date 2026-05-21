@@ -434,3 +434,32 @@ body{
     margin-left:-14px;
   }
 }
+.rematch-wrap{
+  display:flex;
+  justify-content:center;
+
+  margin-top:16px;
+}
+
+.rematch-btn{
+  border:none;
+
+  background:#ebb331;
+
+  color:#2b2b2b;
+
+  padding:12px 26px;
+
+  border-radius:14px;
+
+  font-size:16px;
+  font-weight:700;
+
+  cursor:pointer;
+
+  transition:0.2s;
+}
+
+.rematch-btn:hover{
+  background:#d69f1f;
+}

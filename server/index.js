@@ -16,20 +16,16 @@ const io = new Server(server, {
   cors: {
     origin: '*',
   },
-
-  pingTimeout: 5000,
-  pingInterval: 2000,
 })
 
 const rooms = {}
 
+const rematchRequests = {}
+
 io.on('connection', (socket) => {
-  console.log(
-    'User connected:',
-    socket.id
-  )
 
   socket.on('joinRoom', (roomId) => {
+
     socket.join(roomId)
 
     socket.roomId = roomId
@@ -39,6 +35,7 @@ io.on('connection', (socket) => {
     }
 
     if (rooms[roomId].length >= 2) {
+
       socket.emit('roomFull')
 
       return
@@ -63,15 +60,12 @@ io.on('connection', (socket) => {
       'players',
       rooms[roomId]
     )
-
-    console.log(
-      `${socket.id} joined ${roomId}`
-    )
   })
 
   socket.on(
     'move',
     ({ roomId, move }) => {
+
       socket.to(roomId).emit(
         'receiveMove',
         move
@@ -79,11 +73,45 @@ io.on('connection', (socket) => {
     }
   )
 
+  socket.on(
+    'requestRematch',
+    (roomId) => {
+
+      if (!rematchRequests[roomId]) {
+
+        rematchRequests[roomId] = []
+      }
+
+      if (
+        !rematchRequests[roomId]
+          .includes(socket.id)
+      ) {
+
+        rematchRequests[roomId]
+          .push(socket.id)
+      }
+
+      io.to(roomId).emit(
+        'rematchWaiting',
+        rematchRequests[roomId]
+          .length
+      )
+
+      if (
+        rematchRequests[roomId]
+          .length === 2
+      ) {
+
+        rematchRequests[roomId] = []
+
+        io.to(roomId).emit(
+          'startRematch'
+        )
+      }
+    }
+  )
+
   socket.on('disconnect', () => {
-    console.log(
-      'Disconnected:',
-      socket.id
-    )
 
     const roomId = socket.roomId
 
@@ -91,6 +119,7 @@ io.on('connection', (socket) => {
       roomId &&
       rooms[roomId]
     ) {
+
       rooms[roomId] =
         rooms[roomId].filter(
           (player) =>
@@ -108,10 +137,15 @@ io.on('connection', (socket) => {
         rooms[roomId]
       )
 
+      delete rematchRequests[
+        roomId
+      ]
+
       if (
         rooms[roomId]
           .length === 0
       ) {
+
         delete rooms[roomId]
       }
     }

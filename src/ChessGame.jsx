@@ -13,23 +13,36 @@ import './index.css'
 
 const ChessGame = () => {
 
+  const [
+    waitingRematch,
+    setWaitingRematch
+  ] = useState(false)
+
   const [game, setGame] =
     useState(new Chess())
 
-  const [selectedSquare, setSelectedSquare] =
-    useState(null)
+  const [
+    selectedSquare,
+    setSelectedSquare
+  ] = useState(null)
 
-  const [moveHistory, setMoveHistory] =
-    useState([])
+  const [
+    moveHistory,
+    setMoveHistory
+  ] = useState([])
 
-  const [capturedPieces, setCapturedPieces] =
-    useState({
-      white: [],
-      black: [],
-    })
+  const [
+    capturedPieces,
+    setCapturedPieces
+  ] = useState({
+    white: [],
+    black: [],
+  })
 
-  const [playerColor, setPlayerColor] =
-    useState(null)
+  const [
+    playerColor,
+    setPlayerColor
+  ] = useState(null)
 
   const [players, setPlayers] =
     useState([])
@@ -43,22 +56,85 @@ const ChessGame = () => {
   const [winner, setWinner] =
     useState(null)
 
-  const [gameStarted, setGameStarted] =
-    useState(false)
+  const [
+    gameStarted,
+    setGameStarted
+  ] = useState(false)
 
-  const [opponentOffline, setOpponentOffline] =
-    useState(false)
+  const [
+    opponentOffline,
+    setOpponentOffline
+  ] = useState(false)
 
-  const [abortTimer, setAbortTimer] =
-    useState(60)
+  const [
+    abortTimer,
+    setAbortTimer
+  ] = useState(60)
 
-  const [gameAborted, setGameAborted] =
-    useState(false)
+  const [
+    gameAborted,
+    setGameAborted
+  ] = useState(false)
 
   const [copied, setCopied] =
     useState(false)
 
-  const { roomId } = useParams()
+  const { roomId } =
+    useParams()
+
+  const pieceSymbols = {
+
+    w:{
+      k:'♔',
+      q:'♕',
+      r:'♖',
+      b:'♗',
+      n:'♘',
+      p:'♙',
+    },
+
+    b:{
+      k:'♚',
+      q:'♛',
+      r:'♜',
+      b:'♝',
+      n:'♞',
+      p:'♟',
+    },
+  }
+
+  const resetGame = (
+    start = false
+  ) => {
+
+    const freshGame =
+      new Chess()
+
+    setGame(freshGame)
+
+    setMoveHistory([])
+
+    setCapturedPieces({
+      white: [],
+      black: [],
+    })
+
+    setWinner(null)
+
+    setWhiteTime(600)
+
+    setBlackTime(600)
+
+    setSelectedSquare(null)
+
+    setOpponentOffline(false)
+
+    setGameAborted(false)
+
+    setAbortTimer(60)
+
+    setGameStarted(start)
+  }
 
   useEffect(() => {
 
@@ -82,18 +158,23 @@ const ChessGame = () => {
 
           setPlayers(data)
 
-          if (data.length === 2) {
+          if (
+            data.length === 2
+          ) {
+
             setOpponentOffline(false)
+
             setAbortTimer(60)
           }
-
         }
       )
 
       socket.on(
         'roomFull',
         () => {
-          alert('Room is full')
+          alert(
+            'Room is full'
+          )
         }
       )
 
@@ -107,7 +188,9 @@ const ChessGame = () => {
 
     return () => {
 
-      socket.off('playerColor')
+      socket.off(
+        'playerColor'
+      )
 
       socket.off('players')
 
@@ -142,7 +225,8 @@ const ChessGame = () => {
             ) {
 
               const victimColor =
-                playedMove.color === 'w'
+                playedMove.color ===
+                'w'
                   ? 'b'
                   : 'w'
 
@@ -169,15 +253,15 @@ const ChessGame = () => {
                         ? 'white'
                         : 'black'
                     ],
-                    capturedSymbol
-                  ]
+                    capturedSymbol,
+                  ],
                 })
               )
             }
 
             setMoveHistory(
               gameCopy.history({
-                verbose:true
+                verbose:true,
               })
             )
 
@@ -189,8 +273,47 @@ const ChessGame = () => {
       }
     )
 
+    socket.on(
+      'rematchWaiting',
+      () => {
+
+        setWaitingRematch(
+          true
+        )
+      }
+    )
+
+    socket.on(
+      'startRematch',
+      () => {
+
+        resetGame(false)
+
+        setWaitingRematch(
+          false
+        )
+
+        setTimeout(() => {
+
+          setGameStarted(true)
+
+        },100)
+      }
+    )
+
     return () => {
-      socket.off('receiveMove')
+
+      socket.off(
+        'receiveMove'
+      )
+
+      socket.off(
+        'rematchWaiting'
+      )
+
+      socket.off(
+        'startRematch'
+      )
     }
 
   }, [])
@@ -206,19 +329,27 @@ const ChessGame = () => {
     const interval =
       setInterval(() => {
 
-        setAbortTimer((prev) => {
+        setAbortTimer(
+          (prev) => {
 
-          if (prev <= 1) {
+            if (
+              prev <= 1
+            ) {
 
-            clearInterval(interval)
+              clearInterval(
+                interval
+              )
 
-            setGameAborted(true)
+              setGameAborted(
+                true
+              )
 
-            return 0
+              return 0
+            }
+
+            return prev - 1
           }
-
-          return prev - 1
-        })
+        )
 
       },1000)
 
@@ -233,51 +364,69 @@ const ChessGame = () => {
 
   useEffect(() => {
 
-if (
-  winner ||
-  game.isCheckmate() ||
-  game.isDraw() ||
-  !gameStarted ||
-  (
-    roomId &&
-    players.length < 2
-  )
-) return
+    if (
+      winner ||
+      game.isCheckmate() ||
+      game.isDraw() ||
+      !gameStarted ||
+      (
+        roomId &&
+        players.length < 2
+      )
+    ) return
 
     const interval =
       setInterval(() => {
 
-        if (game.turn() === 'w') {
+        if (
+          game.turn() === 'w'
+        ) {
 
-          setWhiteTime((prev) => {
+          setWhiteTime(
+            (prev) => {
 
-            if (prev <= 1) {
+              if (
+                prev <= 1
+              ) {
 
-              setWinner('Black')
+                setWinner(
+                  'Black'
+                )
 
-              clearInterval(interval)
+                clearInterval(
+                  interval
+                )
 
-              return 0
+                return 0
+              }
+
+              return prev - 1
             }
-
-            return prev - 1
-          })
+          )
 
         } else {
 
-          setBlackTime((prev) => {
+          setBlackTime(
+            (prev) => {
 
-            if (prev <= 1) {
+              if (
+                prev <= 1
+              ) {
 
-              setWinner('White')
+                setWinner(
+                  'White'
+                )
 
-              clearInterval(interval)
+                clearInterval(
+                  interval
+                )
 
-              return 0
+                return 0
+              }
+
+              return prev - 1
             }
-
-            return prev - 1
-          })
+          )
         }
 
       },1000)
@@ -293,10 +442,14 @@ if (
     roomId,
   ])
 
-  const formatTime = (time) => {
+  const formatTime = (
+    time
+  ) => {
 
     const minutes =
-      Math.floor(time / 60)
+      Math.floor(
+        time / 60
+      )
 
     const seconds =
       time % 60
@@ -308,8 +461,9 @@ if (
     }${seconds}`
   }
 
-  const getValidMoves =
-    (square) => {
+  const getValidMoves = (
+    square
+  ) => {
 
     return game
       .moves({
@@ -319,8 +473,9 @@ if (
       .map((m) => m.to)
   }
 
-  const canMovePiece =
-    (piece) => {
+  const canMovePiece = (
+    piece
+  ) => {
 
     if (!roomId)
       return true
@@ -330,35 +485,16 @@ if (
 
     return (
       (
-        playerColor === 'white' &&
+        playerColor ===
+          'white' &&
         piece.color === 'w'
       ) ||
       (
-        playerColor === 'black' &&
+        playerColor ===
+          'black' &&
         piece.color === 'b'
       )
     )
-  }
-
-  const pieceSymbols = {
-
-    w:{
-      k:'♔',
-      q:'♕',
-      r:'♖',
-      b:'♗',
-      n:'♘',
-      p:'♙',
-    },
-
-    b:{
-      k:'♚',
-      q:'♛',
-      r:'♜',
-      b:'♝',
-      n:'♞',
-      p:'♟',
-    },
   }
 
   const getCaptureDisplay = (
@@ -380,8 +516,10 @@ if (
     ))
   }
 
-  const movePiece =
-    (from,to) => {
+  const movePiece = (
+    from,
+    to
+  ) => {
 
     if (
       winner ||
@@ -389,7 +527,9 @@ if (
     ) return
 
     const gameCopy =
-      new Chess(game.fen())
+      new Chess(
+        game.fen()
+      )
 
     const move =
       gameCopy.move({
@@ -426,8 +566,8 @@ if (
                   ? 'white'
                   : 'black'
               ],
-              capturedSymbol
-            ]
+              capturedSymbol,
+            ],
           })
         )
       }
@@ -436,7 +576,7 @@ if (
 
       setMoveHistory(
         gameCopy.history({
-          verbose:true
+          verbose:true,
         })
       )
 
@@ -461,8 +601,9 @@ if (
     setSelectedSquare(null)
   }
 
-  const onSquareClick =
-    (square) => {
+  const onSquareClick = (
+    square
+  ) => {
 
     if (
       winner ||
@@ -480,7 +621,10 @@ if (
           game.turn() &&
         canMovePiece(piece)
       ) {
-        setSelectedSquare(square)
+
+        setSelectedSquare(
+          square
+        )
       }
 
       return
@@ -492,7 +636,9 @@ if (
       )
 
     if (
-      validMoves.includes(square)
+      validMoves.includes(
+        square
+      )
     ) {
 
       movePiece(
@@ -510,7 +656,9 @@ if (
       canMovePiece(piece)
     ) {
 
-      setSelectedSquare(square)
+      setSelectedSquare(
+        square
+      )
 
       return
     }
@@ -543,12 +691,14 @@ if (
     ]
 
     const ranks =
-      playerColor === 'black'
+      playerColor ===
+      'black'
         ? flippedRanks
         : normalRanks
 
     const files =
-      playerColor === 'black'
+      playerColor ===
+      'black'
         ? flippedFiles
         : normalFiles
 
@@ -565,7 +715,9 @@ if (
           game.get(square)
 
         const isDark =
-          (rIdx + cIdx) % 2 === 1
+          (
+            rIdx + cIdx
+          ) % 2 === 1
 
         const isSelected =
           square ===
@@ -589,7 +741,9 @@ if (
           <div
             key={square}
             onClick={() =>
-              onSquareClick(square)
+              onSquareClick(
+                square
+              )
             }
             className={`
               square
@@ -620,18 +774,17 @@ if (
 
               <span
                 className={`piece ${
-                  piece.color === 'w'
+                  piece.color ===
+                  'w'
                     ? 'white-piece'
                     : 'black-piece'
                 }`}
               >
-
                 {
                   pieceSymbols[
                     piece.color
                   ][piece.type]
                 }
-
               </span>
             )}
 
@@ -642,6 +795,11 @@ if (
 
     return board
   }
+
+  const gameEnded =
+    winner ||
+    game.isCheckmate() ||
+    game.isDraw()
 
   const getStatus = () => {
 
@@ -658,12 +816,16 @@ if (
       roomId &&
       players.length < 2
     ) {
+
       return 'Waiting for opponent...'
     }
 
-    if (game.isCheckmate()) {
+    if (
+      game.isCheckmate()
+    ) {
 
-      return game.turn() === 'w'
+      return game.turn() ===
+        'w'
         ? 'Checkmate! Black Wins!'
         : 'Checkmate! White Wins!'
     }
@@ -673,12 +835,14 @@ if (
 
     if (game.isCheck()) {
 
-      return game.turn() === 'w'
+      return game.turn() ===
+        'w'
         ? 'White King in Check!'
         : 'Black King in Check!'
     }
 
-    return game.turn() === 'w'
+    return game.turn() ===
+      'w'
       ? "White's Turn"
       : "Black's Turn"
   }
@@ -841,6 +1005,40 @@ if (
             </div>
 
           </div>
+
+          {gameEnded && (
+            <div className="rematch-wrap">
+
+              <button
+                className="rematch-btn"
+                disabled={
+                  waitingRematch
+                }
+                onClick={() => {
+
+                  resetGame(
+                    false
+                  )
+
+                  setWaitingRematch(
+                    true
+                  )
+
+                  socket.emit(
+                    'requestRematch',
+                    roomId
+                  )
+                }}
+              >
+                {
+                  waitingRematch
+                    ? 'Waiting for opponent...'
+                    : 'Rematch'
+                }
+              </button>
+
+            </div>
+          )}
 
         </div>
 
