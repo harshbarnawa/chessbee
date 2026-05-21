@@ -133,6 +133,8 @@ const ChessGame = () => {
 
     setAbortTimer(60)
 
+    setWaitingRematch(false)
+
     setGameStarted(start)
   }
 
@@ -273,42 +275,25 @@ const ChessGame = () => {
       }
     )
 
-    socket.on(
-      'rematchWaiting',
-      () => {
 
-        setWaitingRematch(
-          true
-        )
-      }
-    )
+ socket.on(
+  'startRematch',
+  () => {
 
-    socket.on(
-      'startRematch',
-      () => {
+    setWaitingRematch(false)
 
-        resetGame(false)
+    setTimeout(() => {
 
-        setWaitingRematch(
-          false
-        )
+      setGameStarted(true)
 
-        setTimeout(() => {
-
-          setGameStarted(true)
-
-        },100)
-      }
-    )
+    },100)
+  }
+)
 
     return () => {
 
       socket.off(
         'receiveMove'
-      )
-
-      socket.off(
-        'rematchWaiting'
       )
 
       socket.off(
@@ -605,11 +590,15 @@ const ChessGame = () => {
     square
   ) => {
 
-    if (
-      winner ||
-      gameAborted
-    ) return
-
+if (
+  winner ||
+  gameAborted ||
+  waitingRematch ||
+  (
+    roomId &&
+    players.length < 2
+  )
+) return
     const piece =
       game.get(square)
 
@@ -1006,40 +995,35 @@ const ChessGame = () => {
 
           </div>
 
-          {gameEnded && (
-            <div className="rematch-wrap">
+{gameEnded && (
+  <div className="rematch-wrap">
 
-              <button
-                className="rematch-btn"
-                disabled={
-                  waitingRematch
-                }
-                onClick={() => {
+    <button
+      className="rematch-btn"
+      disabled={waitingRematch}
+      onClick={() => {
 
-                  resetGame(
-                    false
-                  )
+        setWaitingRematch(true)
 
-                  setWaitingRematch(
-                    true
-                  )
+        resetGame(false)
 
-                  socket.emit(
-                    'requestRematch',
-                    roomId
-                  )
-                }}
-              >
-                {
-                  waitingRematch
-                    ? 'Waiting for opponent...'
-                    : 'Rematch'
-                }
-              </button>
+        setGameStarted(false)
 
-            </div>
-          )}
+        socket.emit(
+          'requestRematch',
+          roomId
+        )
+      }}
+    >
+      {
+        waitingRematch
+          ? 'Waiting for opponent...'
+          : 'Rematch'
+      }
+    </button>
 
+  </div>
+)}
         </div>
 
         <div className="sidebar">
