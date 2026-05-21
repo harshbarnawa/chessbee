@@ -63,14 +63,8 @@ body{
 .board-wrapper{
   flex:1;
 
-  background:var(--panel);
-
-  border-radius:24px;
-
   padding:18px;
 
-  box-shadow:
-    0 10px 30px rgba(0,0,0,0.35);
 }
 
 .top-bar{
@@ -242,8 +236,6 @@ body{
 
   grid-template-columns:repeat(8,1fr);
 
-  border-radius:18px;
-
   overflow:hidden;
 }
 
@@ -324,12 +316,8 @@ body{
 
   background:var(--panel);
 
-  border-radius:24px;
 
   padding:18px;
-
-  box-shadow:
-    0 10px 30px rgba(0,0,0,0.35);
 
   height:min(70vw,760px);
 }
