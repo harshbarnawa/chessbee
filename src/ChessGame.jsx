@@ -233,14 +233,16 @@ const ChessGame = () => {
 
   useEffect(() => {
 
-    if (
-      winner ||
-      !gameStarted ||
-      (
-        roomId &&
-        players.length < 2
-      )
-    ) return
+if (
+  winner ||
+  game.isCheckmate() ||
+  game.isDraw() ||
+  !gameStarted ||
+  (
+    roomId &&
+    players.length < 2
+  )
+) return
 
     const interval =
       setInterval(() => {
