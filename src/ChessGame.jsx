@@ -4,6 +4,7 @@ import { useChessGame } from './hooks/useChessGame'
 import { useTimer } from './hooks/useTimer'
 import { useSocket } from './hooks/useSocket'
 import { useVoice } from './hooks/useVoice'
+import { useTheme } from './context/ThemeContext'
 
 import TopBar from './components/TopBar'
 import RoomControls from './components/RoomControls'
@@ -13,6 +14,7 @@ import ChessBoard from './components/ChessBoard'
 import RematchButton from './components/RematchButton'
 import Sidebar from './components/Sidebar'
 import VoiceControl from './components/VoiceControl'
+import ThemeSelector from './components/ThemeSelector'
 
 import './index.css'
 
@@ -38,8 +40,11 @@ const ChessGame = () => {
     isDraw,
     gameEnded,
     turn,
-    pieceSymbols,
+    pieceSymbols: defaultPieceSymbols,
   } = useChessGame()
+
+  const { currentPieces } = useTheme()
+  const pieceSymbols = currentPieces.pieces
 
   const {
     playerColor,

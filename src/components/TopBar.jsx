@@ -1,4 +1,5 @@
 import React from 'react'
+import ThemeSelector from './ThemeSelector'
 
 const TopBar = React.memo(({ roomId }) => {
   const handleCreateRoom = () => {
@@ -22,6 +23,8 @@ const TopBar = React.memo(({ roomId }) => {
       </div>
 
       <div className="top-buttons">
+        <ThemeSelector />
+
         {!roomId && (
           <button className="main-btn" onClick={handleCreateRoom}>
             Create Room
