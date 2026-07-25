@@ -18,6 +18,7 @@ import ThemeSelector from './components/ThemeSelector'
 import GameControls from './components/GameControls'
 import PGNExport from './components/PGNExport'
 import GameResult from './components/GameResult'
+import MobileSidebar from './components/MobileSidebar'
 
 import './index.css'
 
@@ -216,7 +217,7 @@ const ChessGame = () => {
   }
 
   return (
-    <div className="chess-app">
+    <div className="chess-app" role="main" aria-label="ChessBee Chess Game">
       <div className="chess-container">
         <div className="board-wrapper">
           <TopBar roomId={roomId} />
@@ -288,6 +289,11 @@ const ChessGame = () => {
           status={getStatus()}
           moveHistory={moveHistory}
           pgnExport={<PGNExport game={game} gameEnded={gameEnded} />}
+        />
+
+        <MobileSidebar
+          status={getStatus()}
+          moveHistory={moveHistory}
         />
       </div>
     </div>

@@ -32,6 +32,7 @@ const GameControls = React.memo(({ gameEnded, canMakeMove, onResign, onDrawOffer
           <button
             className={`control-btn control-resign ${showConfirm === 'resign' ? 'control-confirm' : ''}`}
             onClick={handleResign}
+            aria-label={showConfirm === 'resign' ? 'Confirm resignation' : 'Resign from game'}
           >
             {showConfirm === 'resign' ? 'Confirm Resign?' : '🏳️ Resign'}
           </button>
@@ -40,6 +41,7 @@ const GameControls = React.memo(({ gameEnded, canMakeMove, onResign, onDrawOffer
             <button
               className={`control-btn control-draw ${showConfirm === 'draw' ? 'control-confirm' : ''}`}
               onClick={handleDraw}
+              aria-label={showConfirm === 'draw' ? 'Confirm draw offer' : 'Offer draw'}
             >
               {showConfirm === 'draw' ? 'Confirm Draw?' : '🤝 Offer Draw'}
             </button>
@@ -49,6 +51,7 @@ const GameControls = React.memo(({ gameEnded, canMakeMove, onResign, onDrawOffer
             <button
               className="control-btn control-undo"
               onClick={onUndo}
+              aria-label="Undo last move"
             >
               ↩️ Undo
             </button>

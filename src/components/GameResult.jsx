@@ -33,6 +33,7 @@ const GameResult = React.memo(({ winner, isCheckmate, isDraw, gameAborted, oppon
           className="rematch-btn"
           disabled={waitingRematch}
           onClick={onRematch}
+          aria-label={waitingRematch ? 'Waiting for opponent' : 'Start rematch'}
         >
           {waitingRematch ? 'Waiting for opponent...' : '🔄 Rematch'}
         </button>

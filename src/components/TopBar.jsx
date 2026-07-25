@@ -26,13 +26,13 @@ const TopBar = React.memo(({ roomId }) => {
         <ThemeSelector />
 
         {!roomId && (
-          <button className="main-btn" onClick={handleCreateRoom}>
+          <button className="main-btn" onClick={handleCreateRoom} aria-label="Create a new game room">
             Create Room
           </button>
         )}
 
         {roomId && (
-          <button className="leave-btn" onClick={handleLeave}>
+          <button className="leave-btn" onClick={handleLeave} aria-label="Leave room">
             <img
               src="/leave.svg"
               alt="Leave"

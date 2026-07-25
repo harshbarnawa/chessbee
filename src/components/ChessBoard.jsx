@@ -44,7 +44,7 @@ const ChessBoard = React.memo(({ game, selectedSquare, getValidMoves, playerColo
 
   return (
     <div className="board-container">
-      <div className="board">
+      <div className="board" role="grid" aria-label="Chess board">
         {board}
       </div>
     </div>

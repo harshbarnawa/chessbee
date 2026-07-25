@@ -7,6 +7,7 @@ const RematchButton = React.memo(({ waitingRematch, onClick }) => {
         className="rematch-btn"
         disabled={waitingRematch}
         onClick={onClick}
+        aria-label={waitingRematch ? 'Waiting for opponent to accept rematch' : 'Request rematch'}
       >
         {waitingRematch ? 'Waiting for opponent...' : 'Rematch'}
       </button>

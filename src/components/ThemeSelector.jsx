@@ -11,6 +11,8 @@ const ThemeSelector = React.memo(() => {
         className="theme-toggle"
         onClick={() => setIsOpen(!isOpen)}
         title="Board Theme"
+        aria-label="Change board theme"
+        aria-expanded={isOpen}
       >
         🎨
       </button>

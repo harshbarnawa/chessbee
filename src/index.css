@@ -518,6 +518,106 @@ body{
   padding:20px 0;
 }
 
+/* Mobile Sidebar */
+.mobile-sidebar-toggle{
+  display:none;
+  position:fixed;
+  bottom:20px;
+  right:20px;
+  width:52px;
+  height:52px;
+  border-radius:50%;
+  border:none;
+  background:var(--accent);
+  color:#1a1a1f;
+  font-size:22px;
+  cursor:pointer;
+  z-index:500;
+  box-shadow:var(--shadow-lg), 0 0 20px var(--accent-glow);
+  transition:all var(--transition-fast);
+}
+
+.mobile-sidebar-toggle:hover{
+  transform:scale(1.05);
+}
+
+.mobile-sidebar-overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.6);
+  backdrop-filter:blur(4px);
+  z-index:900;
+  display:flex;
+  align-items:flex-end;
+  animation:fadeIn var(--transition-fast);
+}
+
+.mobile-sidebar{
+  width:100%;
+  max-height:70vh;
+  background:var(--panel);
+  border-top:1px solid var(--panel-border);
+  border-radius:var(--radius-xl) var(--radius-xl) 0 0;
+  padding:20px;
+  animation:slideUp var(--transition-normal);
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+}
+
+.mobile-sidebar-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:14px;
+}
+
+.mobile-sidebar-title{
+  font-size:18px;
+  font-weight:700;
+}
+
+.mobile-sidebar-close{
+  width:32px;
+  height:32px;
+  border:none;
+  border-radius:50%;
+  background:rgba(255,255,255,0.06);
+  color:var(--text-secondary);
+  font-size:14px;
+  cursor:pointer;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  transition:background var(--transition-fast);
+}
+
+.mobile-sidebar-close:hover{
+  background:rgba(255,255,255,0.12);
+}
+
+.mobile-status-box{
+  background:rgba(255,255,255,0.04);
+  border:1px solid var(--panel-border);
+  padding:12px 14px;
+  border-radius:var(--radius-md);
+  margin-bottom:12px;
+  font-weight:600;
+  font-size:14px;
+  text-align:center;
+}
+
+.mobile-moves-box{
+  background:rgba(255,255,255,0.03);
+  border:1px solid var(--panel-border);
+  border-radius:var(--radius-md);
+  padding:12px;
+  overflow-y:auto;
+  flex:1;
+  scrollbar-width:thin;
+  scrollbar-color:rgba(255,255,255,0.1) transparent;
+}
+
 /* Responsive */
 @media(max-width:1100px){
   .chess-container{
@@ -551,6 +651,12 @@ body{
 
   .sidebar{
     display:none;
+  }
+
+  .mobile-sidebar-toggle{
+    display:flex;
+    justify-content:center;
+    align-items:center;
   }
 
   .top-bar{

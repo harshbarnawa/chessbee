@@ -9,8 +9,9 @@ const RoomControls = React.memo(({ roomId, copied, abortTimer, gameAborted, play
         <input
           value={window.location.href}
           readOnly
+          aria-label="Room invite link"
         />
-        <button className="copy-btn" onClick={onCopyUrl}>
+        <button className="copy-btn" onClick={onCopyUrl} aria-label="Copy room link to clipboard">
           {copied ? 'Copied' : 'Copy'}
         </button>
       </div>

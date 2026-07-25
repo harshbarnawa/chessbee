@@ -39,6 +39,8 @@ const VoiceControl = React.memo(({
         className={`voice-btn ${isListening ? 'voice-btn-active' : ''}`}
         onClick={onToggleListening}
         title="Press V to toggle voice (or click)"
+        aria-label={isListening ? 'Stop listening' : 'Start voice input'}
+        aria-pressed={isListening}
       >
         <span className="voice-icon">
           {isListening ? '🔴' : '🎤'}

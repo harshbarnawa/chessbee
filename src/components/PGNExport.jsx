@@ -59,10 +59,10 @@ const PGNExport = React.memo(({ game, gameEnded }) => {
 
   return (
     <div className="pgn-export">
-      <button className="pgn-btn" onClick={handleCopy} title="Copy PGN">
+      <button className="pgn-btn" onClick={handleCopy} title="Copy PGN" aria-label="Copy PGN to clipboard">
         {copied ? '✓ Copied' : '📋 Copy PGN'}
       </button>
-      <button className="pgn-btn" onClick={handleDownload} title="Download PGN">
+      <button className="pgn-btn" onClick={handleDownload} title="Download PGN" aria-label="Download PGN file">
         💾 Download
       </button>
     </div>
