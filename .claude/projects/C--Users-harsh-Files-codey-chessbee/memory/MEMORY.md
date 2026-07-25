@@ -1,0 +1,3 @@
+- [project-overview](project-overview.md) — ChessBee is a voice-first chess platform, React+Socket.io, deployed on Vercel+Render
+- [coding-standards](coding-standards.md) — Follow PROMPT.md rules: small commits, conventional commits, push after every commit
+- [voice-first-vision](voice-first-vision.md) — Voice is PRIMARY interaction, mouse only for UI, this is the core differentiator
