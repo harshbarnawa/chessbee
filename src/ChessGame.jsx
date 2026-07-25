@@ -1,8 +1,9 @@
-import React from 'react'
+import React, { useCallback } from 'react'
 import { useParams } from 'react-router-dom'
 import { useChessGame } from './hooks/useChessGame'
 import { useTimer } from './hooks/useTimer'
 import { useSocket } from './hooks/useSocket'
+import { useVoice } from './hooks/useVoice'
 
 import TopBar from './components/TopBar'
 import RoomControls from './components/RoomControls'
@@ -11,6 +12,7 @@ import CapturedPieces from './components/CapturedPieces'
 import ChessBoard from './components/ChessBoard'
 import RematchButton from './components/RematchButton'
 import Sidebar from './components/Sidebar'
+import VoiceControl from './components/VoiceControl'
 
 import './index.css'
 
@@ -60,6 +62,104 @@ const ChessGame = () => {
     resetTimers,
     formatTime,
   } = useTimer(gameStarted, gameEnded, turn, roomId, players, setWinner)
+
+  const canMakeMove = !gameEnded && !gameAborted && !waitingRematch && !(roomId && players.length < 2)
+
+  const handleVoiceCommand = useCallback((command) => {
+    if (!canMakeMove) return
+
+    switch (command.type) {
+      case 'move': {
+        const { from, to } = command
+        if (from && to) {
+          movePiece(from, to, emitMove)
+        } else if (from && !to) {
+          setSelectedSquare(from)
+        }
+        break
+      }
+
+      case 'select': {
+        const { square } = command
+        if (square) {
+          const piece = game.get(square)
+          if (piece && piece.color === turn) {
+            setSelectedSquare(square)
+          } else if (selectedSquare) {
+            const validMoves = getValidMoves(selectedSquare)
+            if (validMoves.includes(square)) {
+              movePiece(selectedSquare, square, emitMove)
+            }
+          }
+        }
+        break
+      }
+
+      case 'castle': {
+        if (command.side === 'kingside') {
+          if (turn === 'w') {
+            movePiece('e1', 'g1', emitMove)
+          } else {
+            movePiece('e8', 'g8', emitMove)
+          }
+        } else {
+          if (turn === 'w') {
+            movePiece('e1', 'c1', emitMove)
+          } else {
+            movePiece('e8', 'c8', emitMove)
+          }
+        }
+        break
+      }
+
+      case 'capture': {
+        if (selectedSquare) {
+          movePiece(selectedSquare, command.to, emitMove)
+        }
+        break
+      }
+
+      case 'promote': {
+        if (selectedSquare && command.to) {
+          movePiece(selectedSquare, command.to, emitMove)
+        }
+        break
+      }
+
+      case 'resign': {
+        setWinner(turn === 'w' ? 'Black' : 'White')
+        break
+      }
+
+      case 'draw': {
+        if (roomId) {
+          // TODO: Implement draw offer socket event
+        }
+        break
+      }
+
+      case 'undo': {
+        // Undo not supported in multiplayer
+        if (!roomId) {
+          // TODO: Implement local undo
+        }
+        break
+      }
+
+      default:
+        break
+    }
+  }, [canMakeMove, game, turn, selectedSquare, getValidMoves, movePiece, emitMove, setSelectedSquare, setWinner, roomId])
+
+  const {
+    isListening,
+    isSupported,
+    transcript,
+    interimTranscript,
+    error: voiceError,
+    toggleListening,
+    clearError,
+  } = useVoice(handleVoiceCommand)
 
   const getStatus = () => {
     if (gameAborted) return 'Game Aborted'
@@ -124,6 +224,16 @@ const ChessGame = () => {
             playerColor={playerColor}
             pieceSymbols={pieceSymbols}
             onSquareClick={handleSquareClick}
+          />
+
+          <VoiceControl
+            isListening={isListening}
+            isSupported={isSupported}
+            transcript={transcript}
+            interimTranscript={interimTranscript}
+            error={voiceError}
+            onToggleListening={toggleListening}
+            onClearError={clearError}
           />
 
           {gameEnded && (
