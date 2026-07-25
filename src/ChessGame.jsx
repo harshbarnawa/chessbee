@@ -849,7 +849,7 @@ if (
             <div className="logo-section">
 
               <img
-                src="/bee-logo.png"
+                src="/bee-logo.svg"
                 alt="Chess Bee"
                 className="logo-img"
               />
