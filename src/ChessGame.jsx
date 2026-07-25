@@ -15,6 +15,9 @@ import RematchButton from './components/RematchButton'
 import Sidebar from './components/Sidebar'
 import VoiceControl from './components/VoiceControl'
 import ThemeSelector from './components/ThemeSelector'
+import GameControls from './components/GameControls'
+import PGNExport from './components/PGNExport'
+import GameResult from './components/GameResult'
 
 import './index.css'
 
@@ -34,12 +37,14 @@ const ChessGame = () => {
     resetGame,
     getValidMoves,
     movePiece,
+    undoMove,
     receiveMove,
     onSquareClick,
     isCheckmate,
     isDraw,
     gameEnded,
     turn,
+    canUndo,
     pieceSymbols: defaultPieceSymbols,
   } = useChessGame()
 
@@ -132,21 +137,18 @@ const ChessGame = () => {
       }
 
       case 'resign': {
-        setWinner(turn === 'w' ? 'Black' : 'White')
+        handleResign()
         break
       }
 
       case 'draw': {
-        if (roomId) {
-          // TODO: Implement draw offer socket event
-        }
+        handleDrawOffer()
         break
       }
 
       case 'undo': {
-        // Undo not supported in multiplayer
-        if (!roomId) {
-          // TODO: Implement local undo
+        if (!roomId && canUndo) {
+          undoMove()
         }
         break
       }
@@ -154,7 +156,7 @@ const ChessGame = () => {
       default:
         break
     }
-  }, [canMakeMove, game, turn, selectedSquare, getValidMoves, movePiece, emitMove, setSelectedSquare, setWinner, roomId])
+  }, [canMakeMove, game, turn, selectedSquare, getValidMoves, movePiece, emitMove, setSelectedSquare, roomId, canUndo, undoMove])
 
   const {
     isListening,
@@ -199,6 +201,20 @@ const ChessGame = () => {
     requestRematch()
   }
 
+  const handleResign = () => {
+    setWinner(turn === 'w' ? 'Black' : 'White')
+  }
+
+  const handleDrawOffer = () => {
+    // TODO: Implement draw offer via socket
+  }
+
+  const handleUndo = () => {
+    if (!roomId && canUndo) {
+      undoMove()
+    }
+  }
+
   return (
     <div className="chess-app">
       <div className="chess-container">
@@ -241,6 +257,25 @@ const ChessGame = () => {
             onClearError={clearError}
           />
 
+          <GameControls
+            gameEnded={gameEnded}
+            canMakeMove={canMakeMove}
+            onResign={handleResign}
+            onDrawOffer={handleDrawOffer}
+            onUndo={handleUndo}
+            isLocal={!roomId}
+          />
+
+          <GameResult
+            winner={winner}
+            isCheckmate={isCheckmate}
+            isDraw={isDraw}
+            gameAborted={gameAborted}
+            opponentOffline={opponentOffline}
+            onRematch={handleRematch}
+            waitingRematch={waitingRematch}
+          />
+
           {gameEnded && (
             <RematchButton
               waitingRematch={waitingRematch}
@@ -252,6 +287,7 @@ const ChessGame = () => {
         <Sidebar
           status={getStatus()}
           moveHistory={moveHistory}
+          pgnExport={<PGNExport game={game} gameEnded={gameEnded} />}
         />
       </div>
     </div>

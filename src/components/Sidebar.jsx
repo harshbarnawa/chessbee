@@ -2,12 +2,13 @@ import React from 'react'
 import GameStatus from './GameStatus'
 import MoveHistory from './MoveHistory'
 
-const Sidebar = React.memo(({ status, moveHistory }) => {
+const Sidebar = React.memo(({ status, moveHistory, pgnExport }) => {
   return (
     <div className="sidebar">
       <div className="sidebar-title">Game Status</div>
       <GameStatus status={status} />
       <MoveHistory moveHistory={moveHistory} />
+      {pgnExport}
     </div>
   )
 })

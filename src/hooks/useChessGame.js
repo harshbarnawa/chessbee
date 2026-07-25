@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import { Chess } from 'chess.js'
 
 const PIECE_SYMBOLS = {
@@ -13,6 +13,7 @@ export function useChessGame() {
   const [capturedPieces, setCapturedPieces] = useState({ white: [], black: [] })
   const [winner, setWinner] = useState(null)
   const [gameStarted, setGameStarted] = useState(false)
+  const historyRef = useRef([])
 
   const resetGame = useCallback((start = false) => {
     const freshGame = new Chess()
@@ -22,6 +23,7 @@ export function useChessGame() {
     setCapturedPieces({ white: [], black: [] })
     setWinner(null)
     setGameStarted(start)
+    historyRef.current = []
   }, [])
 
   const getValidMoves = useCallback((square) => {
@@ -52,6 +54,7 @@ export function useChessGame() {
     const move = gameCopy.move({ from, to, promotion: 'q' })
 
     if (move) {
+      historyRef.current.push(game.fen())
       applyMoveToState(gameCopy, move)
       setGame(gameCopy)
       setGameStarted(true)
@@ -68,12 +71,38 @@ export function useChessGame() {
     return false
   }, [game, winner, applyMoveToState])
 
+  const undoMove = useCallback(() => {
+    if (historyRef.current.length === 0) return false
+
+    const previousFen = historyRef.current.pop()
+    const previousGame = new Chess(previousFen)
+
+    setGame(previousGame)
+    setMoveHistory(previousGame.history({ verbose: true }))
+    setSelectedSquare(null)
+
+    // Rebuild captured pieces from history
+    const newCaptured = { white: [], black: [] }
+    const history = previousGame.history({ verbose: true })
+    history.forEach((m) => {
+      if (m.captured) {
+        const victimColor = m.color === 'w' ? 'b' : 'w'
+        const capturedSymbol = PIECE_SYMBOLS[victimColor][m.captured]
+        newCaptured[m.color === 'w' ? 'white' : 'black'].push(capturedSymbol)
+      }
+    })
+    setCapturedPieces(newCaptured)
+
+    return true
+  }, [])
+
   const receiveMove = useCallback((move) => {
     setGame((currentGame) => {
       const gameCopy = new Chess(currentGame.fen())
       const playedMove = gameCopy.move(move)
 
       if (playedMove) {
+        historyRef.current.push(currentGame.fen())
         applyMoveToState(gameCopy, playedMove)
       }
 
@@ -117,6 +146,7 @@ export function useChessGame() {
   const isCheck = game.isCheck()
   const gameEnded = winner || isCheckmate || isDraw
   const turn = game.turn()
+  const canUndo = historyRef.current.length > 0
 
   return {
     game,
@@ -131,6 +161,7 @@ export function useChessGame() {
     resetGame,
     getValidMoves,
     movePiece,
+    undoMove,
     receiveMove,
     onSquareClick,
     isCheckmate,
@@ -138,6 +169,7 @@ export function useChessGame() {
     isCheck,
     gameEnded,
     turn,
+    canUndo,
     pieceSymbols: PIECE_SYMBOLS,
   }
 }

@@ -680,3 +680,143 @@ body{
 .theme-name{
   flex:1;
 }
+
+/* Game Controls */
+.game-controls{
+  display:flex;
+  justify-content:center;
+  gap:10px;
+  margin-top:14px;
+}
+
+.control-btn{
+  border:none;
+  padding:10px 18px;
+  border-radius:10px;
+  font-size:13px;
+  font-weight:600;
+  cursor:pointer;
+  transition:all 0.2s;
+  background:rgba(255,255,255,0.08);
+  color:#e0e0e0;
+}
+
+.control-btn:hover{
+  background:rgba(255,255,255,0.12);
+}
+
+.control-resign{
+  background:rgba(229,115,115,0.15);
+  color:#e57373;
+}
+
+.control-resign:hover{
+  background:rgba(229,115,115,0.25);
+}
+
+.control-draw{
+  background:rgba(255,193,7,0.15);
+  color:#ffc107;
+}
+
+.control-draw:hover{
+  background:rgba(255,193,7,0.25);
+}
+
+.control-undo{
+  background:rgba(100,181,246,0.15);
+  color:#64b5f6;
+}
+
+.control-undo:hover{
+  background:rgba(100,181,246,0.25);
+}
+
+.control-confirm{
+  background:rgba(229,115,115,0.3);
+  animation:pulse-confirm 0.5s ease-in-out;
+}
+
+@keyframes pulse-confirm{
+  0%,100%{transform:scale(1)}
+  50%{transform:scale(1.05)}
+}
+
+/* PGN Export */
+.pgn-export{
+  display:flex;
+  gap:8px;
+  margin-top:12px;
+  padding-top:12px;
+  border-top:1px solid rgba(255,255,255,0.05);
+}
+
+.pgn-btn{
+  flex:1;
+  border:none;
+  padding:8px;
+  border-radius:8px;
+  font-size:12px;
+  font-weight:500;
+  cursor:pointer;
+  background:rgba(255,255,255,0.06);
+  color:#999;
+  transition:all 0.2s;
+}
+
+.pgn-btn:hover{
+  background:rgba(255,255,255,0.1);
+  color:#e0e0e0;
+}
+
+/* Game Result Overlay */
+.game-result-overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.7);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  z-index:1000;
+  animation:fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn{
+  from{opacity:0}
+  to{opacity:1}
+}
+
+.game-result-card{
+  background:var(--panel);
+  border-radius:20px;
+  padding:40px;
+  text-align:center;
+  min-width:300px;
+  box-shadow:0 16px 64px rgba(0,0,0,0.5);
+  animation:slideUp 0.3s ease;
+}
+
+@keyframes slideUp{
+  from{transform:translateY(20px);opacity:0}
+  to{transform:translateY(0);opacity:1}
+}
+
+.result-icon{
+  font-size:64px;
+  display:block;
+  margin-bottom:16px;
+}
+
+.result-text{
+  font-size:24px;
+  font-weight:700;
+  color:#f5f5f5;
+  margin-bottom:24px;
+}
+
+.no-moves{
+  color:#666;
+  font-size:13px;
+  text-align:center;
+  padding:20px 0;
+}
