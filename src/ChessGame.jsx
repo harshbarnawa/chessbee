@@ -58,6 +58,7 @@ const ChessGame = () => {
     gameAborted,
     opponentOffline,
     resetTimers,
+    formatTime,
   } = useTimer(gameStarted, gameEnded, turn, roomId, players, setWinner)
 
   const getStatus = () => {
@@ -111,7 +112,7 @@ const ChessGame = () => {
           <Timer
             whiteTime={whiteTime}
             blackTime={blackTime}
-            formatTime={(t) => `${Math.floor(t / 60)}:${t % 60 < 10 ? '0' : ''}${t % 60}`}
+            formatTime={formatTime}
           />
 
           <CapturedPieces capturedPieces={capturedPieces} />
