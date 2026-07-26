@@ -1,7 +1,27 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 
-const GameControls = React.memo(({ gameEnded, canMakeMove, onResign, onDrawOffer, onUndo, isLocal }) => {
+const GameControls = React.memo(({
+  gameEnded,
+  canMakeMove,
+  onResign,
+  onDrawOffer,
+  onUndo,
+  isLocal,
+  drawOffered,
+  drawOfferFrom,
+  onAcceptDraw,
+  onDeclineDraw,
+  playerColor,
+}) => {
   const [showConfirm, setShowConfirm] = useState(null)
+
+  // Auto-clear confirmation after 3 seconds
+  useEffect(() => {
+    if (showConfirm) {
+      const timeout = setTimeout(() => setShowConfirm(null), 3000)
+      return () => clearTimeout(timeout)
+    }
+  }, [showConfirm])
 
   const handleResign = () => {
     if (showConfirm === 'resign') {
@@ -9,7 +29,6 @@ const GameControls = React.memo(({ gameEnded, canMakeMove, onResign, onDrawOffer
       setShowConfirm(null)
     } else {
       setShowConfirm('resign')
-      setTimeout(() => setShowConfirm(null), 3000)
     }
   }
 
@@ -19,11 +38,33 @@ const GameControls = React.memo(({ gameEnded, canMakeMove, onResign, onDrawOffer
       setShowConfirm(null)
     } else {
       setShowConfirm('draw')
-      setTimeout(() => setShowConfirm(null), 3000)
     }
   }
 
   if (gameEnded) return null
+
+  // Show draw offer from opponent
+  if (drawOffered && drawOfferFrom && drawOfferFrom !== playerColor) {
+    return (
+      <div className="game-controls draw-offer-controls">
+        <span className="draw-offer-text">Draw offered by opponent</span>
+        <button
+          className="control-btn control-draw"
+          onClick={onAcceptDraw}
+          aria-label="Accept draw offer"
+        >
+          ✓ Accept
+        </button>
+        <button
+          className="control-btn control-resign"
+          onClick={onDeclineDraw}
+          aria-label="Decline draw offer"
+        >
+          ✕ Decline
+        </button>
+      </div>
+    )
+  }
 
   return (
     <div className="game-controls">
@@ -41,9 +82,14 @@ const GameControls = React.memo(({ gameEnded, canMakeMove, onResign, onDrawOffer
             <button
               className={`control-btn control-draw ${showConfirm === 'draw' ? 'control-confirm' : ''}`}
               onClick={handleDraw}
+              disabled={drawOffered && drawOfferFrom === playerColor}
               aria-label={showConfirm === 'draw' ? 'Confirm draw offer' : 'Offer draw'}
             >
-              {showConfirm === 'draw' ? 'Confirm Draw?' : '🤝 Offer Draw'}
+              {drawOffered && drawOfferFrom === playerColor
+                ? 'Draw Offered...'
+                : showConfirm === 'draw'
+                ? 'Confirm Draw?'
+                : '🤝 Offer Draw'}
             </button>
           )}
 

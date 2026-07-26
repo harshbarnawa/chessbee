@@ -1,6 +1,6 @@
 import React from 'react'
 
-const GameResult = React.memo(({ winner, isCheckmate, isDraw, gameAborted, opponentOffline, onRematch, waitingRematch }) => {
+const GameResult = React.memo(({ winner, isCheckmate, isDraw, isStalemate, gameAborted, opponentOffline, gameStatus, onRematch, waitingRematch }) => {
   if (!winner && !isCheckmate && !isDraw && !gameAborted && !opponentOffline) return null
 
   let resultText = ''
@@ -13,15 +13,31 @@ const GameResult = React.memo(({ winner, isCheckmate, isDraw, gameAborted, oppon
     resultText = 'Opponent Disconnected'
     resultIcon = '📴'
   } else if (isCheckmate) {
-    const winnerColor = winner === 'White' ? 'White' : 'Black'
-    resultText = `Checkmate! ${winnerColor} Wins!`
+    // winner is set by the server via handleGameOver, capitalize it
+    const winnerName = winner || 'Unknown'
+    resultText = `Checkmate! ${winnerName} Wins!`
     resultIcon = '👑'
+  } else if (isStalemate) {
+    resultText = 'Stalemate — Draw!'
+    resultIcon = '🤝'
   } else if (isDraw) {
-    resultText = 'Draw!'
+    // Differentiate draw reasons
+    let drawReason = ''
+    if (gameStatus === 'repetition') drawReason = ' (Threefold Repetition)'
+    else if (gameStatus === 'insufficient material') drawReason = ' (Insufficient Material)'
+    else if (gameStatus === 'fifty-move rule') drawReason = ' (Fifty-Move Rule)'
+    else if (gameStatus === 'agreement') drawReason = ' (By Agreement)'
+    resultText = `Draw!${drawReason}`
     resultIcon = '🤝'
   } else if (winner) {
-    resultText = `${winner} Wins on Time!`
-    resultIcon = '⏱️'
+    // Differentiate between resignation and timeout
+    if (gameStatus === 'resignation') {
+      resultText = `${winner} Wins!`
+      resultIcon = '🏆'
+    } else {
+      resultText = `${winner} Wins on Time!`
+      resultIcon = '⏱️'
+    }
   }
 
   return (

@@ -7,6 +7,12 @@ export function useTimer(gameStarted, gameEnded, turn, roomId, players, setWinne
   const [gameAborted, setGameAborted] = useState(false)
   const [opponentOffline, setOpponentOffline] = useState(false)
   const intervalRef = useRef(null)
+  const turnRef = useRef(turn)
+
+  // Keep turnRef in sync
+  useEffect(() => {
+    turnRef.current = turn
+  }, [turn])
 
   const formatTime = useCallback((time) => {
     const minutes = Math.floor(time / 60)
@@ -26,7 +32,17 @@ export function useTimer(gameStarted, gameEnded, turn, roomId, players, setWinne
     }
   }, [])
 
-  // Abort timer (waiting for opponent)
+  // Sync timer values from server state
+  const syncFromServer = useCallback((gameState) => {
+    if (gameState && typeof gameState.whiteTime === 'number') {
+      setWhiteTime(gameState.whiteTime)
+    }
+    if (gameState && typeof gameState.blackTime === 'number') {
+      setBlackTime(gameState.blackTime)
+    }
+  }, [])
+
+  // Abort timer (waiting for opponent in multiplayer)
   useEffect(() => {
     if (!roomId || players.length >= 2 || gameAborted) return
 
@@ -42,20 +58,24 @@ export function useTimer(gameStarted, gameEnded, turn, roomId, players, setWinne
     }, 1000)
 
     return () => clearInterval(interval)
-  }, [roomId, players, gameAborted])
+  }, [roomId, players.length >= 2, gameAborted])
 
-  // Game timer
+  // Game timer — runs continuously, ticks the current player's clock
+  // Does NOT restart on turn change — uses turnRef to avoid stale closures
   useEffect(() => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current)
+      intervalRef.current = null
+    }
+
     if (gameEnded || !gameStarted || (roomId && players.length < 2)) {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current)
-        intervalRef.current = null
-      }
       return
     }
 
     intervalRef.current = setInterval(() => {
-      if (turn === 'w') {
+      const currentTurn = turnRef.current
+
+      if (currentTurn === 'w') {
         setWhiteTime((prev) => {
           if (prev <= 1) {
             setWinner('Black')
@@ -84,7 +104,9 @@ export function useTimer(gameStarted, gameEnded, turn, roomId, players, setWinne
         intervalRef.current = null
       }
     }
-  }, [gameStarted, gameEnded, turn, roomId, players, setWinner])
+    // Only restart the interval when game lifecycle changes, not on every turn change
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gameStarted, gameEnded, roomId, players.length >= 2, setWinner])
 
   return {
     whiteTime,
@@ -96,5 +118,8 @@ export function useTimer(gameStarted, gameEnded, turn, roomId, players, setWinne
     setGameAborted,
     formatTime,
     resetTimers,
+    syncFromServer,
+    setWhiteTime,
+    setBlackTime,
   }
 }

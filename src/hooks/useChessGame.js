@@ -7,12 +7,13 @@ const PIECE_SYMBOLS = {
 }
 
 export function useChessGame() {
-  const [game, setGame] = useState(new Chess())
+  const [game, setGame] = useState(() => new Chess())
   const [selectedSquare, setSelectedSquare] = useState(null)
   const [moveHistory, setMoveHistory] = useState([])
   const [capturedPieces, setCapturedPieces] = useState({ white: [], black: [] })
   const [winner, setWinner] = useState(null)
   const [gameStarted, setGameStarted] = useState(false)
+  const [gameStatus, setGameStatus] = useState(null) // 'checkmate' | 'draw' | 'stalemate' | etc.
   const historyRef = useRef([])
 
   const resetGame = useCallback((start = false) => {
@@ -23,53 +24,141 @@ export function useChessGame() {
     setCapturedPieces({ white: [], black: [] })
     setWinner(null)
     setGameStarted(start)
+    setGameStatus(null)
     historyRef.current = []
   }, [])
 
-  const getValidMoves = useCallback((square) => {
-    return game.moves({ square, verbose: true }).map((m) => m.to)
-  }, [game])
+  const getValidMoves = useCallback(
+    (square) => {
+      return game.moves({ square, verbose: true }).map((m) => m.to)
+    },
+    [game]
+  )
 
-  const applyMoveToState = useCallback((gameCopy, move) => {
-    if (move.captured) {
-      const victimColor = move.color === 'w' ? 'b' : 'w'
-      const capturedSymbol = PIECE_SYMBOLS[victimColor][move.captured]
-
-      setCapturedPieces((prev) => ({
-        ...prev,
-        [move.color === 'w' ? 'white' : 'black']: [
-          ...prev[move.color === 'w' ? 'white' : 'black'],
-          capturedSymbol,
-        ],
-      }))
-    }
-
-    setMoveHistory(gameCopy.history({ verbose: true }))
+  // Rebuild captured pieces from move history
+  const rebuildCapturedPieces = useCallback((history) => {
+    const newCaptured = { white: [], black: [] }
+    history.forEach((m) => {
+      if (m.captured) {
+        const victimColor = m.color === 'w' ? 'b' : 'w'
+        const capturedSymbol = PIECE_SYMBOLS[victimColor][m.captured]
+        newCaptured[m.color === 'w' ? 'white' : 'black'].push(capturedSymbol)
+      }
+    })
+    setCapturedPieces(newCaptured)
   }, [])
 
-  const movePiece = useCallback((from, to, emitMove) => {
-    if (winner) return false
+  // Apply a validated move to local state (used for both local and received moves)
+  const applyValidatedMove = useCallback(
+    (moveData) => {
+      setGame((currentGame) => {
+        const gameCopy = new Chess(currentGame.fen())
+        const playedMove = gameCopy.move({
+          from: moveData.from,
+          to: moveData.to,
+          promotion: moveData.promotion || 'q',
+        })
 
-    const gameCopy = new Chess(game.fen())
-    const move = gameCopy.move({ from, to, promotion: 'q' })
+        if (playedMove) {
+          historyRef.current.push(currentGame.fen())
+          setMoveHistory(gameCopy.history({ verbose: true }))
+          rebuildCapturedPieces(gameCopy.history({ verbose: true }))
+          return gameCopy
+        }
 
-    if (move) {
-      historyRef.current.push(game.fen())
-      applyMoveToState(gameCopy, move)
-      setGame(gameCopy)
-      setGameStarted(true)
-      setSelectedSquare(null)
+        // Move failed — return current game unchanged
+        return currentGame
+      })
+    },
+    [rebuildCapturedPieces]
+  )
 
-      if (emitMove) {
-        emitMove({ from, to, promotion: 'q' })
+  // Local player makes a move (optimistic, sends to server for validation)
+  const movePiece = useCallback(
+    (from, to, emitMove) => {
+      if (winner || gameStatus) return false
+
+      // Check it's the right player's turn in multiplayer
+      // (server will validate, but we check locally too for immediate feedback)
+      const gameCopy = new Chess(game.fen())
+      const move = gameCopy.move({ from, to, promotion: 'q' })
+
+      if (move) {
+        // Optimistically apply the move locally
+        historyRef.current.push(game.fen())
+        setMoveHistory(gameCopy.history({ verbose: true }))
+        rebuildCapturedPieces(gameCopy.history({ verbose: true }))
+        setGame(gameCopy)
+        setGameStarted(true)
+        setSelectedSquare(null)
+
+        // Send to server for validation and broadcast
+        if (emitMove) {
+          emitMove({ from, to, promotion: 'q' })
+        }
+
+        return true
       }
 
-      return true
-    }
+      setSelectedSquare(null)
+      return false
+    },
+    [game, winner, gameStatus, rebuildCapturedPieces]
+  )
 
-    setSelectedSquare(null)
-    return false
-  }, [game, winner, applyMoveToState])
+  // Receive a move from the server (opponent's move or validated自己的 move)
+  const receiveServerMove = useCallback(
+    (moveData) => {
+      setGame((currentGame) => {
+        const gameCopy = new Chess(currentGame.fen())
+        const playedMove = gameCopy.move({
+          from: moveData.from,
+          to: moveData.to,
+          promotion: moveData.promotion || 'q',
+        })
+
+        if (playedMove) {
+          historyRef.current.push(currentGame.fen())
+          setMoveHistory(gameCopy.history({ verbose: true }))
+          rebuildCapturedPieces(gameCopy.history({ verbose: true }))
+          return gameCopy
+        }
+
+        return currentGame
+      })
+      setGameStarted(true)
+      setSelectedSquare(null)
+    },
+    [rebuildCapturedPieces]
+  )
+
+  // Receive full game state from server (on join, reconnect, rematch)
+  const applyServerGameState = useCallback(
+    (gameState) => {
+      if (!gameState || !gameState.fen) return
+
+      const newGame = new Chess(gameState.fen)
+      setGame(newGame)
+      setMoveHistory(gameState.moveHistory || [])
+      rebuildCapturedPieces(gameState.moveHistory || [])
+      setGameStarted(gameState.started || false)
+      setSelectedSquare(null)
+      historyRef.current = []
+
+      // Rebuild history ref from the game
+      // We don't need the full history ref for server-authoritative mode
+    },
+    [rebuildCapturedPieces]
+  )
+
+  // Handle game over from server
+  const handleGameOver = useCallback((data) => {
+    if (data.winner) {
+      // Capitalize first letter
+      setWinner(data.winner.charAt(0).toUpperCase() + data.winner.slice(1))
+    }
+    setGameStatus(data.reason)
+  }, [])
 
   const undoMove = useCallback(() => {
     if (historyRef.current.length === 0) return false
@@ -96,57 +185,46 @@ export function useChessGame() {
     return true
   }, [])
 
-  const receiveMove = useCallback((move) => {
-    setGame((currentGame) => {
-      const gameCopy = new Chess(currentGame.fen())
-      const playedMove = gameCopy.move(move)
-
-      if (playedMove) {
-        historyRef.current.push(currentGame.fen())
-        applyMoveToState(gameCopy, playedMove)
+  const onSquareClick = useCallback(
+    (square, canMovePieceFn, players, roomId, waitingRematchFlag, gameAbortedFlag) => {
+      if (winner || gameStatus || gameAbortedFlag || waitingRematchFlag || (roomId && players.length < 2)) {
+        return
       }
 
-      return gameCopy
-    })
+      const piece = game.get(square)
 
-    setGameStarted(true)
-  }, [applyMoveToState])
+      if (!selectedSquare) {
+        if (piece && piece.color === game.turn() && canMovePieceFn(piece)) {
+          setSelectedSquare(square)
+        }
+        return
+      }
 
-  const onSquareClick = useCallback((square, canMovePiece, players, roomId, waitingRematch, gameAborted) => {
-    if (winner || gameAborted || waitingRematch || (roomId && players.length < 2)) {
-      return
-    }
+      const validMoves = getValidMoves(selectedSquare)
 
-    const piece = game.get(square)
+      if (validMoves.includes(square)) {
+        return { from: selectedSquare, to: square }
+      }
 
-    if (!selectedSquare) {
-      if (piece && piece.color === game.turn() && canMovePiece(piece)) {
+      if (piece && piece.color === game.turn() && canMovePieceFn(piece)) {
         setSelectedSquare(square)
+        return null
       }
-      return
-    }
 
-    const validMoves = getValidMoves(selectedSquare)
-
-    if (validMoves.includes(square)) {
-      return { from: selectedSquare, to: square }
-    }
-
-    if (piece && piece.color === game.turn() && canMovePiece(piece)) {
-      setSelectedSquare(square)
+      setSelectedSquare(null)
       return null
-    }
+    },
+    [game, selectedSquare, winner, gameStatus, getValidMoves]
+  )
 
-    setSelectedSquare(null)
-    return null
-  }, [game, selectedSquare, winner, getValidMoves])
-
-  const isCheckmate = game.isCheckmate()
-  const isDraw = game.isDraw()
-  const isCheck = game.isCheck()
-  const gameEnded = winner || isCheckmate || isDraw
+  const isCheckmate = gameStatus === 'checkmate'
+  const isDraw = gameStatus === 'draw' || gameStatus === 'stalemate' ||
+    gameStatus === 'repetition' || gameStatus === 'insufficient material' ||
+    gameStatus === 'fifty-move rule' || gameStatus === 'agreement'
+  const isStalemate = gameStatus === 'stalemate'
+  const gameEnded = winner !== null || isCheckmate || isDraw
   const turn = game.turn()
-  const canUndo = historyRef.current.length > 0
+  const canUndo = historyRef.current.length > 0 && !gameEnded
 
   return {
     game,
@@ -158,15 +236,19 @@ export function useChessGame() {
     setWinner,
     gameStarted,
     setGameStarted,
+    gameStatus,
+    setGameStatus,
     resetGame,
     getValidMoves,
     movePiece,
     undoMove,
-    receiveMove,
+    receiveServerMove,
+    applyServerGameState,
+    handleGameOver,
     onSquareClick,
     isCheckmate,
     isDraw,
-    isCheck,
+    isStalemate,
     gameEnded,
     turn,
     canUndo,

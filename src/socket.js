@@ -5,9 +5,10 @@ const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'https://chessbylibrary.on
 export const socket = io(SOCKET_URL, {
   transports: ['websocket', 'polling'],
   reconnection: true,
-  reconnectionAttempts: 5,
+  reconnectionAttempts: 10,
   reconnectionDelay: 1000,
   reconnectionDelayMax: 5000,
+  autoConnect: false,
 })
 
 socket.on('connect', () => {
@@ -20,8 +21,4 @@ socket.on('disconnect', (reason) => {
 
 socket.on('connect_error', (error) => {
   console.error('Socket connection error:', error.message)
-})
-
-socket.on('error', (error) => {
-  console.error('Socket error:', error)
 })

@@ -386,6 +386,12 @@ body{
   transform:scale(1.2);
 }
 
+/* Capture indicator - ring around piece on valid capture squares */
+.valid .piece{
+  box-shadow:inset 0 0 0 5px var(--valid);
+  border-radius:50%;
+}
+
 .check{
   background:var(--check)!important;
 }
@@ -496,19 +502,45 @@ body{
   border-radius:3px;
 }
 
-.move{
-  padding:6px 8px;
-
+.move-row{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  padding:4px 8px;
   border-radius:6px;
-
-  color:#e5e5e5;
   font-size:14px;
-
   transition:background var(--transition-fast);
 }
 
-.move:hover{
+.move-row:hover{
   background:rgba(255,255,255,0.04);
+}
+
+.move-number{
+  color:var(--text-muted);
+  min-width:28px;
+  font-size:12px;
+  font-weight:600;
+}
+
+.move-white,
+.move-black{
+  color:#e5e5e5;
+  padding:2px 6px;
+  border-radius:4px;
+  min-width:48px;
+  font-weight:500;
+  transition:background var(--transition-fast);
+}
+
+.move-white:hover,
+.move-black:hover{
+  background:rgba(255,255,255,0.06);
+}
+
+.move-current{
+  background:rgba(235,179,49,0.15);
+  color:var(--accent);
 }
 
 .no-moves{
@@ -1032,6 +1064,26 @@ body{
 @keyframes pulse-confirm{
   0%,100%{transform:scale(1)}
   50%{transform:scale(1.03)}
+}
+
+/* Draw Offer Controls */
+.draw-offer-controls{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:10px;
+  margin-top:16px;
+  padding:14px;
+  background:rgba(255,193,7,0.08);
+  border:1px solid rgba(255,193,7,0.2);
+  border-radius:var(--radius-md);
+  animation:fadeIn var(--transition-fast);
+}
+
+.draw-offer-text{
+  font-size:14px;
+  font-weight:600;
+  color:#ffc107;
 }
 
 /* PGN Export */

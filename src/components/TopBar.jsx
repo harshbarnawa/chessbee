@@ -1,14 +1,21 @@
 import React from 'react'
+import { useNavigate } from 'react-router-dom'
 import ThemeSelector from './ThemeSelector'
 
-const TopBar = React.memo(({ roomId }) => {
+const TopBar = React.memo(({ roomId, onLeave }) => {
+  const navigate = useNavigate()
+
   const handleCreateRoom = () => {
     const id = crypto.randomUUID()
-    window.location.href = `/room/${id}`
+    navigate(`/room/${id}`)
   }
 
   const handleLeave = () => {
-    window.location.href = '/'
+    if (onLeave) {
+      onLeave()
+    } else {
+      navigate('/')
+    }
   }
 
   return (
