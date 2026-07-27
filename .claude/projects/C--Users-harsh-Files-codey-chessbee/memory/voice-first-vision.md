@@ -39,6 +39,7 @@ ChessBee's core vision is voice-first chess interaction:
 - Live transcript display
 - Confidence badges (High/Medium/Low)
 - Error handling with retry
+- Mobile floating microphone button (visible on ≤768px viewport)
 
 **Why:** This is the primary differentiator from Chess.com and Lichess. Voice-first makes chess more accessible and natural.
 
