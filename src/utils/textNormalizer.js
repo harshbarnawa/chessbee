@@ -6,7 +6,8 @@
  *
  * Pipeline:
  *   Raw transcript → lowercase → filler-word removal →
- *   number-word replacement → canonicalised string
+ *   homophone correction → number-word replacement →
+ *   square spacing normalization → cleanup
  */
 
 // Filler words and disfluencies to remove entirely
@@ -14,7 +15,7 @@ const FILLER_WORDS = new Set([
   'um', 'uh', 'er', 'ah', 'like', 'well', 'so', 'actually',
   'basically', 'literally', 'honestly', 'i mean', 'you know',
   'please', 'thanks', 'thank you', 'sorry', 'dude', 'bro',
-  'i want to', 'i wanna', 'i would like to', 'can i',
+  'i wanna', 'i would like to', 'can i',
   'could you', 'would you', 'let me', 'i need to', 'i will',
   'just', 'maybe', 'probably', 'kinda', 'sort of',
 ])
@@ -27,56 +28,138 @@ const NUMBER_WORDS = new Map([
   ['eleven', '11'], ['twelve', '12'],
 ])
 
-// Homophone / common-misrecognition mapping for chess terms
-// These map misheard words TO canonical chess terms
+/**
+ * Homophone / common-misrecognition mapping for chess terms.
+ *
+ * Maps misheard words → canonical chess terms.
+ *
+ * CRITICAL: "to" is NOT a homophone. It's the preposition in
+ * "pawn to e4" and must stay as "to".
+ */
 const CHESS_HOMOPHONES = new Map([
-  // Piece names
-  ['queen', 'queen'], ['green', 'queen'], ['clean', 'queen'],
-  ['quean', 'queen'], ['quinn', 'queen'], ['keen', 'queen'],
-  ['rook', 'rook'], ['rock', 'rook'], ['wreck', 'rook'],
-  ['roof', 'rook'], ['knight', 'knight'], ['night', 'knight'],
-  ['nite', 'knight'], ['knife', 'knight'], ['nice', 'knight'],
-  ['bishop', 'bishop'], ['bisop', 'bishop'], ['bishup', 'bishop'],
-  ['bi shop', 'bishop'], ['bish', 'bishop'], ['biscuit', 'bishop'],
+  // ── Piece names ──────────────────────────────────────────────
+  // Pawn — speech APIs commonly hear "want", "won", "porn", "pon", etc.
   ['pawn', 'pawn'], ['pwan', 'pawn'], ['prawn', 'pawn'],
   ['pon', 'pawn'], ['porn', 'pawn'], ['pun', 'pawn'],
   ['pown', 'pawn'], ['pom', 'pawn'], ['poin', 'pawn'],
-  ['king', 'king'], ['kin', 'king'], ['keen', 'king'],
-  // Action words
+  ['want', 'pawn'], ['wont', 'pawn'], ['won', 'pawn'],
+  ['wan', 'pawn'], ['warn', 'pawn'], ['warned', 'pawn'],
+  ['pound', 'pawn'], ['pond', 'pawn'], ['bond', 'pawn'],
+  ['wanted', 'pawn'], ['wanda', 'pawn'], ['wand', 'pawn'],
+  ['panda', 'pawn'], ['panic', 'pawn'], ['paint', 'pawn'],
+  ['went', 'pawn'], ['vent', 'pawn'], ['rent', 'pawn'],
+  ['lent', 'pawn'], ['tent', 'pawn'], ['bent', 'pawn'],
+
+  // Knight — "night", "nite", "knife", "right", "light", "white"
+  ['knight', 'knight'], ['night', 'knight'], ['nite', 'knight'],
+  ['knife', 'knight'], ['right', 'knight'], ['light', 'knight'],
+  ['wright', 'knight'], ['write', 'knight'], ['rite', 'knight'],
+  ['white', 'knight'], ['bright', 'knight'], ['fright', 'knight'],
+  ['delight', 'knight'], ['quite', 'knight'], ['quote', 'knight'],
+  ['site', 'knight'], ['sight', 'knight'], ['tight', 'knight'],
+  ['flight', 'knight'], ['might', 'knight'],
+  ['naitan', 'knight'], ['niten', 'knight'], ['high', 'knight'],
+
+  // Bishop — "bish", "bishup", "bisop"
+  ['bishop', 'bishop'], ['bisop', 'bishop'], ['bishup', 'bishop'],
+  ['bi shop', 'bishop'], ['bish', 'bishop'], ['biscuit', 'bishop'],
+  ['bushel', 'bishop'], ['fishing', 'bishop'],
+  ['wish', 'bishop'], ['dish', 'bishop'], ['fish', 'bishop'],
+  ['rich', 'bishop'], ['which', 'bishop'], ['switch', 'bishop'],
+  ['bichop', 'bishop'], ['be shop', 'bishop'],
+
+  // Rook — "rock", "wreck", "roof"
+  ['rook', 'rook'], ['rock', 'rook'], ['wreck', 'rook'],
+  ['roof', 'rook'], ['brook', 'rook'], ['crook', 'rook'],
+  ['look', 'rook'], ['cook', 'rook'], ['book', 'rook'],
+  ['hook', 'rook'], ['took', 'rook'], ['nook', 'rook'],
+  ['shook', 'rook'], ['knook', 'rook'],
+  ['rauk', 'rook'], ['rawk', 'rook'], ['wrong', 'rook'],
+  ['route', 'rook'], ['rude', 'rook'], ['room', 'rook'],
+
+  // Queen — "green", "clean", "quinn"
+  ['queen', 'queen'], ['green', 'queen'], ['clean', 'queen'],
+  ['quean', 'queen'], ['quinn', 'queen'], ['keen', 'queen'],
+  ['queens', 'queen'],
+  ['queen', 'queen'], ['cream', 'queen'], ['dream', 'queen'],
+  ['scream', 'queen'], ['stream', 'queen'], ['bean', 'queen'],
+  ['mean', 'queen'], ['lean', 'queen'], ['jean', 'queen'],
+  ['seen', 'queen'], ['scene', 'queen'],
+  ['mean', 'queen'], ['team', 'queen'], ['beam', 'queen'],
+
+  // King — "kin", "kin"
+  ['king', 'king'], ['kin', 'king'], ['ring', 'king'],
+  ['sing', 'king'], ['wing', 'king'], ['bring', 'king'],
+  ['thing', 'king'], ['swing', 'king'], ['sting', 'king'],
+  ['cling', 'king'], ['fling', 'king'], ['sling', 'king'],
+  ['blink', 'king'], ['sink', 'king'], ['link', 'king'],
+  ['ping', 'king'], ['ding', 'king'], ['zing', 'king'],
+
+  // ── Action words ─────────────────────────────────────────────
   ['capture', 'capture'], ['capcha', 'capture'], ['kapture', 'capture'],
   ['take', 'capture'], ['takes', 'capture'], ['took', 'capture'],
-  ['captures', 'capture'], ['cap', 'capture'],
+  ['captures', 'capture'], ['cap', 'capture'], ['tap', 'capture'],
+
   ['castle', 'castle'], ['castl', 'castle'], ['castel', 'castle'],
-  ['cassel', 'castle'], ['cattle', 'castle'],
+  ['cassel', 'castle'], ['cattle', 'castle'], ['puzzle', 'castle'],
+
   ['kingside', 'kingside'], ['king side', 'kingside'],
   ['queenside', 'queenside'], ['queen side', 'queenside'],
+
   ['promote', 'promote'], ['promotion', 'promote'], ['premote', 'promote'],
+  ['promoted', 'promote'],
+
   ['undo', 'undo'], ['undue', 'undo'], ['un do', 'undo'],
   ['take back', 'undo'], ['takeback', 'undo'], ['took back', 'undo'],
+
   ['resign', 'resign'], ['resin', 'resign'], ['design', 'resign'],
   ['re sign', 'resign'], ['resigning', 'resign'],
+
   ['draw', 'draw'], ['door', 'draw'], ['drawn', 'draw'],
   ['offer draw', 'draw'], ['draw offer', 'draw'],
-  // Number homophones — "to" is NOT a number; it's the preposition in "pawn to e4"
-  ['two', '2'],
+
+  // ── Number homophones ────────────────────────────────────────
+  ['zero', '0'], ['oh', '0'],
+  ['one', '1'], ['won', '1'],
+  ['two', '2'], ['too', '2'],
+  ['three', '3'], ['tree', '3'], ['free', '3'],
   ['for', '4'], ['four', '4'], ['fore', '4'],
-  ['ate', '8'], ['eight', '8'],
-  // Square homophones
-  ['see', 'c'], ['bee', 'b'], ['dee', 'd'], ['gee', 'g'],
-  ['ay', 'a'], ['eh', 'a'],
+  ['five', '5'], ['fire', '5'], ['dive', '5'],
+  ['six', '6'], ['sicks', '6'], ['sick', '6'],
+  ['seven', '7'], ['savings', '7'], ['second', '7'],
+  ['eight', '8'], ['ate', '8'],
+  ['nine', '9'], ['mine', '9'], ['dine', '9'],
+
+  // ── Square letter homophones ─────────────────────────────────
+  ['ay', 'a'], ['eh', 'a'], ['aye', 'a'],
+  ['bee', 'b'], ['be', 'b'], ['bea', 'b'], ['beep', 'b'],
+  ['see', 'c'], ['sea', 'c'], ['si', 'c'],
+  ['dee', 'd'], ['die', 'd'], ['dye', 'd'],
+  ['ee', 'e'], ['east', 'e'], ['each', 'e'],
+  ['eff', 'f'], ['if', 'f'],
+  ['gee', 'g'], ['je', 'g'], ['joe', 'g'],
+  ['aitch', 'h'], ['haitch', 'h'], ['hey', 'h'],
+  ['ex', 'x'], ['sex', 'x'], ['axe', 'x'],
+  ['why', 'y'], ['y', 'y'],
+  ['zed', 'z'], ['zee', 'z'],
 ])
 
 /**
  * Remove filler words and disfluencies from text.
+ * Handles multi-word fillers first to avoid partial matches.
  */
 function removeFillers(text) {
   let result = text.toLowerCase().trim()
-  for (const filler of FILLER_WORDS) {
-    // Use word-boundary regex to avoid partial matches
+
+  // Sort fillers by length (longest first) so multi-word fillers
+  // like "i want to" get removed before single words
+  const sorted = [...FILLER_WORDS].sort((a, b) => b.length - a.length)
+
+  for (const filler of sorted) {
     const regex = new RegExp(`\\b${filler.replace(/\s+/g, '\\s+')}\\b`, 'gi')
     result = result.replace(regex, '')
   }
-  // Collapse multiple spaces
+
   return result.replace(/\s+/g, ' ').trim()
 }
 
@@ -110,6 +193,14 @@ function applyHomophoneMap(text) {
 
 /**
  * Main normalization pipeline.
+ *
+ * Order matters:
+ *   1. Lowercase + trim
+ *   2. Remove fillers (before homophones, so "i want to" → "")
+ *   3. Replace number words
+ *   4. Apply homophones (maps "night" → "knight", "want" → "pawn", etc.)
+ *   5. Normalize square spacing ("e 4" → "e4")
+ *   6. Cleanup
  */
 export function normalizeTranscript(raw) {
   if (!raw || typeof raw !== 'string') return ''

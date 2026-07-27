@@ -3,8 +3,6 @@ import React, { useEffect } from 'react'
 const VoiceControl = React.memo(({
   isListening,
   isSupported,
-  transcript,
-  interimTranscript,
   error,
   parsedDisplay,
   onToggleListening,
@@ -54,37 +52,20 @@ const VoiceControl = React.memo(({
       {isListening && (
         <div className="voice-status">
           <span className="voice-label">Listening...</span>
-          {interimTranscript && (
-            <span className="voice-interim">{interimTranscript}</span>
-          )}
+          <span className="voice-hint-small">Speak your move command</span>
         </div>
       )}
 
-      {/* Parsed command display (shown after recognition) */}
+      {/* Parsed command display (shown after recognition - clean, normalized text) */}
       {parsedDisplay && !isListening && (
         <div className={`voice-command-display ${parsedDisplay.rejected ? 'voice-rejected' : ''}`}>
           <span className={`voice-confidence ${parsedDisplay.confidence.className}`}>
             {parsedDisplay.confidence.label}
           </span>
           <span className="voice-command-text">
-            {parsedDisplay.text}
+            {parsedDisplay.normalized || parsedDisplay.text}
           </span>
-          {parsedDisplay.normalized && parsedDisplay.normalized !== parsedDisplay.raw && (
-            <span className="voice-normalized-hint">
-              — you said: "{parsedDisplay.raw}"
-            </span>
-          )}
         </div>
-      )}
-
-      {/* Show full transcript while listening */}
-      {transcript && isListening && (
-        <div className="voice-transcript">{transcript}</div>
-      )}
-
-      {/* Show raw transcript briefly after recognition (if parsed differently) */}
-      {transcript && !isListening && !parsedDisplay?.normalized && (
-        <div className="voice-transcript">{transcript}</div>
       )}
 
       {error && (
@@ -95,7 +76,7 @@ const VoiceControl = React.memo(({
       )}
 
       <div className="voice-hint">
-        Press <kbd>V</kbd> to speak a move
+        Press <kbd>V</kbd> or click 🎤 to speak
       </div>
     </div>
   )

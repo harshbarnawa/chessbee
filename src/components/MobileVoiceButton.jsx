@@ -26,18 +26,13 @@ const MobileVoiceButton = React.memo(({
         {isListening && <span className="mobile-voice-pulse" />}
       </button>
 
-      {/* Show parsed command briefly after recognition */}
+      {/* Show parsed command briefly after recognition - clean normalized text only */}
       {parsedDisplay && !isListening && (
         <div className={`mobile-voice-tooltip ${parsedDisplay.rejected ? 'mobile-voice-rejected' : ''}`}>
           <span className={`mobile-voice-confidence ${parsedDisplay.confidence.className}`}>
             {parsedDisplay.confidence.label}
           </span>
-          <span className="mobile-voice-command-text">{parsedDisplay.text}</span>
-          {parsedDisplay.normalized && parsedDisplay.normalized !== parsedDisplay.raw && (
-            <span className="mobile-voice-correction">
-              — you said: "{parsedDisplay.raw}"
-            </span>
-          )}
+          <span className="mobile-voice-command-text">{parsedDisplay.normalized || parsedDisplay.text}</span>
         </div>
       )}
     </div>

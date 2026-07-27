@@ -47,7 +47,6 @@ const ChessGame = () => {
     receiveServerMove,
     applyServerGameState,
     handleGameOver,
-    onSquareClick,
     isCheckmate,
     isDraw,
     isStalemate,
@@ -163,31 +162,48 @@ const ChessGame = () => {
     }
   }, [roomId, receiveServerMove, handleGameOver, syncFromServer, applyServerGameState, gameStarted, gameEnded, setGameOverData, resetGame, resetTimers])
 
+  // ── Voice-only mode: no mouse/touch square click handler ──────────
+
+  /**
+   * Execute a voice move and speak feedback only on success.
+   */
+  const executeVoiceMove = useCallback((from, to, emitMove, piece) => {
+    const success = movePiece(from, to, emitMove)
+    if (success) {
+      speakCommandFeedback({ type: 'move', piece, from, to })
+    }
+    return success
+  }, [movePiece, emitMove])
+
   // ── Voice Commands ─────────────────────────────────────────────────
   const handleVoiceCommand = useCallback(
     (command) => {
       if (!canMakeMove) return
 
-      // Give spoken confirmation for every command
-      speakCommandFeedback(command)
-
       switch (command.type) {
         case 'move': {
           const { from, to, piece } = command
+
           if (from && to) {
             // Direct move: "e2 e4", "e2 to e4"
-            movePiece(from, to, emitMove)
-          } else if (!from && to && piece) {
-            // Piece-to-square move: "pawn to e4", "knight to f3"
-            // Find which piece of this type can legally move to the target square
-            const allMovesToSquare = game.moves({ square: to, verbose: true })
-            const matchingMoves = allMovesToSquare.filter(m => m.piece === piece)
-            if (matchingMoves.length === 1) {
-              movePiece(matchingMoves[0].from, to, emitMove)
-            } else if (matchingMoves.length > 1) {
-              // Multiple pieces can move there — use the first valid one
-              // (could ask for clarification, but single-move is most common)
-              movePiece(matchingMoves[0].from, to, emitMove)
+            executeVoiceMove(from, to, emitMove, piece)
+          } else if (!from && to) {
+            // Voice-only move: "pawn to e4", "knight f3", "e4", etc.
+            // Get ALL legal moves and filter by target square
+            const allLegalMoves = game.moves({ verbose: true })
+            const movesToTarget = allLegalMoves.filter(m => m.to === to)
+
+            if (movesToTarget.length === 0) break // No valid move to this square
+
+            let candidateMoves = movesToTarget
+            if (piece) {
+              // Filter by piece type: "pawn to e4", "knight f3"
+              candidateMoves = movesToTarget.filter(m => m.piece === piece)
+            }
+
+            if (candidateMoves.length > 0) {
+              // Pick the first valid move — voice-only, auto-select
+              executeVoiceMove(candidateMoves[0].from, to, emitMove, piece)
             }
           } else if (from && !to) {
             setSelectedSquare(from)
@@ -196,65 +212,69 @@ const ChessGame = () => {
         }
 
         case 'select': {
-          const { square } = command
+          // Voice-only mode: treat any square mention as a move target
+          const { square, piece } = command
           if (square) {
-            const piece = game.get(square)
-            if (piece && piece.color === turn) {
-              setSelectedSquare(square)
-            } else if (selectedSquare) {
-              const validMoves = getValidMoves(selectedSquare)
-              if (validMoves.includes(square)) {
-                movePiece(selectedSquare, square, emitMove)
-              }
+            const allLegalMoves = game.moves({ verbose: true })
+            const movesToTarget = allLegalMoves.filter(m => m.to === square)
+            if (movesToTarget.length > 0) {
+              executeVoiceMove(movesToTarget[0].from, square, emitMove, piece)
             }
           }
           break
         }
 
         case 'castle': {
-          if (command.side === 'kingside') {
-            if (turn === 'w') {
-              movePiece('e1', 'g1', emitMove)
-            } else {
-              movePiece('e8', 'g8', emitMove)
-            }
-          } else {
-            if (turn === 'w') {
-              movePiece('e1', 'c1', emitMove)
-            } else {
-              movePiece('e8', 'c8', emitMove)
-            }
-          }
+          const castleSource = turn === 'w' ? 'e1' : 'e8'
+          const castleTarget = command.side === 'kingside'
+            ? (turn === 'w' ? 'g1' : 'g8')
+            : (turn === 'w' ? 'c1' : 'c8')
+          executeVoiceMove(castleSource, castleTarget, emitMove, 'k')
           break
         }
 
         case 'capture': {
-          if (selectedSquare) {
-            movePiece(selectedSquare, command.to, emitMove)
+          if (selectedSquare && command.to) {
+            executeVoiceMove(selectedSquare, command.to, emitMove, command.piece)
           }
           break
         }
 
         case 'promote': {
           if (selectedSquare && command.to) {
-            movePiece(selectedSquare, command.to, emitMove)
+            executeVoiceMove(selectedSquare, command.to, emitMove, command.piece)
           }
           break
         }
 
         case 'resign': {
+          speakCommandFeedback(command)
           handleResign()
           break
         }
 
         case 'draw': {
+          speakCommandFeedback(command)
           handleDrawOffer()
+          break
+        }
+
+        case 'acceptDraw': {
+          speakCommandFeedback({ type: 'acceptDraw' })
+          handleAcceptDraw()
+          break
+        }
+
+        case 'declineDraw': {
+          speakCommandFeedback({ type: 'declineDraw' })
+          handleDeclineDraw()
           break
         }
 
         case 'undo': {
           if (!roomId && canUndo) {
             undoMove()
+            speakCommandFeedback(command)
           }
           break
         }
@@ -264,7 +284,7 @@ const ChessGame = () => {
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [canMakeMove, game, turn, selectedSquare, getValidMoves, movePiece, emitMove, setSelectedSquare, roomId, canUndo, undoMove]
+    [canMakeMove, game, turn, selectedSquare, getValidMoves, executeVoiceMove, emitMove, setSelectedSquare, roomId, canUndo, undoMove, handleResign, handleDrawOffer, handleAcceptDraw, handleDeclineDraw]
   )
 
   const {
@@ -302,18 +322,6 @@ const ChessGame = () => {
     return turn === 'w' ? "White's Turn" : "Black's Turn"
   }
 
-  // ── Square Click Handler ──────────────────────────────────────────
-  const handleSquareClick = useCallback(
-    (square) => {
-      const result = onSquareClick(square, canMovePiece, players, roomId, waitingRematch, gameAborted)
-
-      if (result && result.from && result.to) {
-        movePiece(result.from, result.to, emitMove)
-      }
-    },
-    [onSquareClick, canMovePiece, players, roomId, waitingRematch, gameAborted, movePiece, emitMove]
-  )
-
   // ── Rematch Handler ───────────────────────────────────────────────
   const handleRematch = useCallback(() => {
     resetGame(false)
@@ -348,13 +356,6 @@ const ChessGame = () => {
     declineDraw()
   }, [declineDraw])
 
-  // ── Undo Handler (local only) ─────────────────────────────────────
-  const handleUndo = useCallback(() => {
-    if (!roomId && canUndo) {
-      undoMove()
-    }
-  }, [roomId, canUndo, undoMove])
-
   // ── Leave Room ────────────────────────────────────────────────────
   const handleLeave = useCallback(() => {
     leaveRoom()
@@ -386,14 +387,11 @@ const ChessGame = () => {
             getValidMoves={getValidMoves}
             playerColor={playerColor}
             pieceSymbols={pieceSymbols}
-            onSquareClick={handleSquareClick}
           />
 
           <VoiceControl
             isListening={isListening}
             isSupported={isSupported}
-            transcript={transcript}
-            interimTranscript={interimTranscript}
             error={voiceError}
             parsedDisplay={parsedDisplay}
             onToggleListening={toggleListening}
@@ -403,14 +401,8 @@ const ChessGame = () => {
           <GameControls
             gameEnded={gameEnded}
             canMakeMove={canMakeMove}
-            onResign={handleResign}
-            onDrawOffer={handleDrawOffer}
-            onUndo={handleUndo}
-            isLocal={!roomId}
             drawOffered={drawOffered}
             drawOfferFrom={drawOfferFrom}
-            onAcceptDraw={handleAcceptDraw}
-            onDeclineDraw={handleDeclineDraw}
             playerColor={playerColor}
           />
 

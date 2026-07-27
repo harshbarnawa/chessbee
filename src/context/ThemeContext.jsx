@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
+import { createPieceSvg } from '../utils/chessPieces'
 
 const ThemeContext = createContext()
 
@@ -53,16 +54,24 @@ export const BOARD_THEMES = {
   },
 }
 
+// Build SVG pieces from the utility
+const svgPieces = {
+  w: { k: '', q: '', r: '', b: '', n: '', p: '' },
+  b: { k: '', q: '', r: '', b: '', n: '', p: '' },
+}
+;['w', 'b'].forEach(c => {
+  ;['k', 'q', 'r', 'b', 'n', 'p'].forEach(t => {
+    svgPieces[c][t] = createPieceSvg(t, c)
+  })
+})
+
 export const PIECE_STYLES = {
+  svg: {
+    name: 'Premium',
+    pieces: svgPieces,
+  },
   unicode: {
     name: 'Classic Unicode',
-    pieces: {
-      w: { k: '♔', q: '♕', r: '♖', b: '♗', n: '♘', p: '♙' },
-      b: { k: '♚', q: '♛', r: '♜', b: '♝', n: '♞', p: '♟' },
-    },
-  },
-  merida: {
-    name: 'Merida',
     pieces: {
       w: { k: '♔', q: '♕', r: '♖', b: '♗', n: '♘', p: '♙' },
       b: { k: '♚', q: '♛', r: '♜', b: '♝', n: '♞', p: '♟' },
@@ -78,7 +87,7 @@ export function ThemeProvider({ children }) {
 
   const [pieceStyle, setPieceStyle] = useState(() => {
     const saved = localStorage.getItem('chessbee-piece-style')
-    return saved && PIECE_STYLES[saved] ? saved : 'unicode'
+    return saved && PIECE_STYLES[saved] ? saved : 'svg'
   })
 
   useEffect(() => {

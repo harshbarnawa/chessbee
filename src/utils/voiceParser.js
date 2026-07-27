@@ -39,6 +39,8 @@ const ACTION_KEYWORDS = {
   undo: ['undo', 'take back', 'takeback', 'takeback'],
   resign: ['resign', 'forfeit', 'quit', 'resigning'],
   draw: ['draw', 'offer draw', 'draw offer', 'offering draw'],
+  acceptDraw: ['accept draw', 'draw accept', 'accept'],
+  declineDraw: ['decline draw', 'draw decline', 'decline'],
 }
 
 /**
@@ -101,6 +103,26 @@ function detectDraw(normalized) {
 function detectUndo(normalized) {
   if (detectAction(normalized, ACTION_KEYWORDS.undo)) {
     return { type: 'undo' }
+  }
+  return null
+}
+
+/**
+ * Detect accept draw.
+ */
+function detectAcceptDraw(normalized) {
+  if (detectAction(normalized, ACTION_KEYWORDS.acceptDraw)) {
+    return { type: 'acceptDraw' }
+  }
+  return null
+}
+
+/**
+ * Detect decline draw.
+ */
+function detectDeclineDraw(normalized) {
+  if (detectAction(normalized, ACTION_KEYWORDS.declineDraw)) {
+    return { type: 'declineDraw' }
   }
   return null
 }
@@ -171,9 +193,13 @@ function detectPromote(normalized) {
  *
  * This is the most complex parsing step — we look for:
  * 1. Two squares (from → to)
- * 2. A piece name + two squares (e.g., "knight f3 g5")
- * 3. A piece name + one square (piece selection)
- * 4. Two squares with "to" / "take" in between
+ * 2. A piece name + "to" + single square → "pawn to e4"
+ * 3. A piece name + single square → "knight f3"
+ * 4. Just one square → "e4" (treated as move target)
+ *
+ * IMPORTANT: This is a voice-only chess game. All patterns should
+ * result in move commands, not select commands. The game logic in
+ * ChessGame.jsx resolves the source square automatically.
  */
 function detectMove(normalized, raw) {
   // Extract all squares from the normalized text
@@ -202,34 +228,38 @@ function detectMove(normalized, raw) {
   }
 
   // Case 2: Piece + "to" + single square — "pawn to e4", "knight to f3"
-  // This is a move command where the source square needs to be resolved
-  // from game state (which piece of this type can move to the target).
+  // Source square resolved from game state in ChessGame.jsx
   if (squares.length === 1 && piece && hasTo) {
     return {
       type: 'move',
       piece,
       from: null,
       to: squares[0],
-      confidence: pieceResult.score,
+      confidence: pieceResult ? pieceResult.score : 0.9,
     }
   }
 
-  // Case 3: One square + piece name — "knight f3" (just selecting the piece)
+  // Case 3: Piece + single square — "knight f3", "pawn e4"
+  // This is a move command (not select) in voice-only mode
   if (squares.length === 1 && piece) {
     return {
-      type: 'select',
-      square: squares[0],
+      type: 'move',
       piece,
-      confidence: pieceResult.score,
+      from: null,
+      to: squares[0],
+      confidence: pieceResult ? pieceResult.score : 0.9,
     }
   }
 
-  // Case 4: Just one square — "e4" (square selection)
+  // Case 4: Just one square — "e4"
+  // In voice-only mode, this is a move target
   if (squares.length === 1) {
     return {
-      type: 'select',
-      square: squares[0],
-      confidence: 1,
+      type: 'move',
+      piece: null,
+      from: null,
+      to: squares[0],
+      confidence: 0.85,
     }
   }
 
@@ -260,6 +290,8 @@ export function parseVoiceInput(raw, speechConfidence = 0.8) {
   const tryParse = [
     detectCastle,
     detectResign,
+    detectAcceptDraw,
+    detectDeclineDraw,
     detectDraw,
     detectUndo,
     detectCapture,
@@ -307,6 +339,10 @@ export function getMoveDescription(command) {
       return 'Resign'
     case 'draw':
       return 'Offer Draw'
+    case 'acceptDraw':
+      return 'Accept Draw'
+    case 'declineDraw':
+      return 'Decline Draw'
     case 'undo':
       return 'Undo Move'
     case 'capture':
@@ -318,12 +354,16 @@ export function getMoveDescription(command) {
         ? `Promote to ${PIECE_NAMES[command.promotion] || command.promotion} on ${command.to}`
         : `Promote to ${PIECE_NAMES[command.promotion] || command.promotion}`
     case 'move': {
-      const pieceName = command.piece ? PIECE_NAMES[command.piece] || command.piece : 'Piece'
+      const pieceName = command.piece ? PIECE_NAMES[command.piece] || command.piece : null
       return command.from && command.to
-        ? `${pieceName} ${command.from} to ${command.to}`
+        ? `${pieceName || 'Piece'} ${command.from} to ${command.to}`
         : command.from
-          ? `Select ${pieceName} on ${command.from}`
-          : ''
+          ? `Select ${pieceName || 'Piece'} on ${command.from}`
+          : command.to && pieceName
+            ? `${pieceName} to ${command.to}`
+            : command.to
+              ? `Move to ${command.to}`
+              : ''
     }
     case 'select': {
       const pieceName = command.piece ? PIECE_NAMES[command.piece] || command.piece : null

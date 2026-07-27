@@ -1,11 +1,12 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { parseVoiceInput, getMoveDescription, getConfidenceLabel } from '../utils/voiceParser'
+import { enhanceParse } from '../utils/aiVoiceParser'
 
 /**
  * useVoice — Voice recognition hook for ChessBee
  *
  * Manages the Web Speech API lifecycle, feeds transcripts through the
- * voice-parsing pipeline, and surfaces parsed commands + metadata.
+ * voice-parsing pipeline (local + AI fallback), and surfaces parsed commands + metadata.
  *
  * @param {Function} onCommand        Called with the parsed command object on success
  * @param {Object}   [opts]
@@ -155,6 +156,25 @@ export function useVoice(onCommand, opts = {}) {
           bestParsed = parseVoiceInput(finalTranscript, speechConfidence)
           bestConfidence = bestParsed?.confidence ?? 0
           bestRaw = finalTranscript
+        }
+
+        // AI fallback: if local parsing failed, try enhanced NL parser
+        if (!bestParsed || bestConfidence < confidenceThreshold) {
+          const aiResult = enhanceParse(bestRaw || finalTranscript)
+          if (aiResult) {
+            const aiConfidence = 0.65 // Lower confidence for AI guesses
+            if (aiConfidence >= confidenceThreshold) {
+              bestParsed = {
+                command: aiResult,
+                confidence: aiConfidence,
+                displayText: '',
+                raw: bestRaw || finalTranscript,
+                normalized: finalTranscript,
+                fromAI: true,
+              }
+              bestConfidence = aiConfidence
+            }
+          }
         }
 
         const parsed = bestParsed

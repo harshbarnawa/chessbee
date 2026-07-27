@@ -1,18 +1,19 @@
 import React, { useMemo } from 'react'
 import Square from './Square'
 
-const ChessBoard = React.memo(({ game, selectedSquare, getValidMoves, playerColor, pieceSymbols, onSquareClick }) => {
+const ChessBoard = React.memo(({ game, selectedSquare, getValidMoves, playerColor, pieceSymbols }) => {
+  const normalRanks = ['8', '7', '6', '5', '4', '3', '2', '1']
+  const normalFiles = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
+  const flippedRanks = ['1', '2', '3', '4', '5', '6', '7', '8']
+  const flippedFiles = ['h', 'g', 'f', 'e', 'd', 'c', 'b', 'a']
+
+  const ranks = playerColor === 'black' ? flippedRanks : normalRanks
+  const files = playerColor === 'black' ? flippedFiles : normalFiles
+
+  const validMoves = selectedSquare ? getValidMoves(selectedSquare) : []
+
   const board = useMemo(() => {
     const squares = []
-    const normalRanks = ['8', '7', '6', '5', '4', '3', '2', '1']
-    const normalFiles = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
-    const flippedRanks = ['1', '2', '3', '4', '5', '6', '7', '8']
-    const flippedFiles = ['h', 'g', 'f', 'e', 'd', 'c', 'b', 'a']
-
-    const ranks = playerColor === 'black' ? flippedRanks : normalRanks
-    const files = playerColor === 'black' ? flippedFiles : normalFiles
-
-    const validMoves = selectedSquare ? getValidMoves(selectedSquare) : []
 
     ranks.forEach((rank, rIdx) => {
       files.forEach((file, cIdx) => {
@@ -33,14 +34,15 @@ const ChessBoard = React.memo(({ game, selectedSquare, getValidMoves, playerColo
             isValidMove={isValidMove}
             isKingInCheck={kingInCheck}
             pieceSymbols={pieceSymbols}
-            onClick={onSquareClick}
+            showRankLabel={cIdx === 0 ? rank : null}
+            showFileLabel={rIdx === 7 ? file : null}
           />
         )
       })
     })
 
     return squares
-  }, [game, selectedSquare, getValidMoves, playerColor, pieceSymbols, onSquareClick])
+  }, [game, selectedSquare, getValidMoves, playerColor, pieceSymbols, ranks, files, validMoves])
 
   return (
     <div className="board-container">

@@ -25,7 +25,8 @@ const PIECE_NAMES_SPOKEN = {
 // Spoken feedback templates
 const FEEDBACK_TEMPLATES = {
   move: (piece, from, to) => {
-    const pieceName = piece ? PIECE_NAMES_SPOKEN[piece] || 'piece' : 'piece'
+    const pieceName = piece ? PIECE_NAMES_SPOKEN[piece] || 'piece' : ''
+    if (!pieceName) return `To ${to.toUpperCase()}`
     return pieceName === 'pawn'
       ? `Pawn to ${to.toUpperCase()}`
       : `${pieceName} to ${to.toUpperCase()}`
@@ -38,6 +39,8 @@ const FEEDBACK_TEMPLATES = {
   promote: (piece) => `Promoting to ${PIECE_NAMES_SPOKEN[piece] || 'queen'}`,
   resign: () => 'Resigning',
   draw: () => 'Offering draw',
+  acceptDraw: () => 'Draw accepted',
+  declineDraw: () => 'Draw declined',
   undo: () => 'Undoing move',
   select: (piece, square) => {
     const pieceName = piece ? PIECE_NAMES_SPOKEN[piece] || 'piece' : 'piece'
@@ -113,6 +116,12 @@ export function speakCommandFeedback(command, context = {}) {
       break
     case 'draw':
       text = FEEDBACK_TEMPLATES.draw()
+      break
+    case 'acceptDraw':
+      text = FEEDBACK_TEMPLATES.acceptDraw()
+      break
+    case 'declineDraw':
+      text = FEEDBACK_TEMPLATES.declineDraw()
       break
     case 'undo':
       text = FEEDBACK_TEMPLATES.undo()
