@@ -31,6 +31,67 @@ export function levenshtein(a, b) {
 }
 
 /**
+ * Compute Soundex code for phonetic matching.
+ * Groups words that sound alike in English (e.g. "knight" ≈ "night").
+ * Returns a 4-character code like "K523".
+ */
+export function soundex(word) {
+  if (!word || word.length === 0) return ''
+
+  const upper = word.toUpperCase()
+  const first = upper[0]
+
+  // Mapping of letters to Soundex digits
+  const map = {
+    B: '1', F: '1', P: '1', V: '1',
+    C: '2', G: '2', J: '2', K: '2', Q: '2', S: '2', X: '2', Z: '2',
+    D: '3', T: '3',
+    L: '4',
+    M: '5', N: '5',
+    R: '6',
+  }
+
+  let code = first
+  let prev = map[first] || ''
+
+  for (let i = 1; i < upper.length; i++) {
+    const digit = map[upper[i]] || ''
+    if (digit && digit !== prev) {
+      code += digit
+      prev = digit
+    }
+    if (code.length === 4) break
+  }
+
+  // Pad with zeros
+  while (code.length < 4) code += '0'
+  return code
+}
+
+/**
+ * Compute similarity between two words using both Levenshtein and Soundex.
+ * Returns a score between 0 and 1.
+ */
+export function hybridSimilarity(a, b) {
+  if (!a || !b) return 0
+  if (a === b) return 1
+
+  const levScore = similarity(a, b)
+
+  // If Levenshtein says they're very different, check Soundex
+  if (levScore < 0.4) {
+    const sxA = soundex(a)
+    const sxB = soundex(b)
+    if (sxA === sxB && sxA !== '0000') {
+      // Phonetically similar but spelled differently
+      return Math.max(levScore, 0.55)
+    }
+  }
+
+  return levScore
+}
+
+/**
  * Compute similarity score (0-1) between two strings.
  * 1 = identical, 0 = completely different.
  */
