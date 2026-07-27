@@ -20,6 +20,7 @@ import GameControls from './components/GameControls'
 import PGNExport from './components/PGNExport'
 import GameResult from './components/GameResult'
 import MobileSidebar from './components/MobileSidebar'
+import MobileVoiceButton from './components/MobileVoiceButton'
 
 import './index.css'
 
@@ -424,6 +425,12 @@ const ChessGame = () => {
         />
 
         <MobileSidebar status={getStatus()} moveHistory={moveHistory} />
+
+        <MobileVoiceButton
+          isListening={isListening}
+          parsedDisplay={parsedDisplay}
+          onToggleListening={toggleListening}
+        />
       </div>
     </div>
   )
