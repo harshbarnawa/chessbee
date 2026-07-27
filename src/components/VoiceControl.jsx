@@ -71,7 +71,7 @@ const VoiceControl = React.memo(({
           </span>
           {parsedDisplay.normalized && parsedDisplay.normalized !== parsedDisplay.raw && (
             <span className="voice-normalized-hint">
-              — heard: "{parsedDisplay.raw}"
+              — you said: "{parsedDisplay.raw}"
             </span>
           )}
         </div>

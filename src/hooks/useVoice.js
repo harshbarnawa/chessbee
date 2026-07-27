@@ -118,16 +118,47 @@ export function useVoice(onCommand, opts = {}) {
         // Get estimated confidence from the speech API
         // Use the confidence of the last final result
         let speechConfidence = 0.8
+        let lastFinalResult = null
         for (let i = event.results.length - 1; i >= 0; i--) {
           if (event.results[i].isFinal) {
+            lastFinalResult = event.results[i]
             speechConfidence = event.results[i][0].confidence || 0.8
             break
           }
         }
 
-        // Parse through our pipeline
-        const parsed = parseVoiceInput(finalTranscript, speechConfidence)
-        const confidence = parsed?.confidence ?? 0
+        // Try ALL alternatives from the speech API to find the best parse.
+        // The first alternative is usually highest confidence from the ASR,
+        // but a lower-ranked alternative might match chess vocabulary better
+        // (e.g. "pawn" vs "porn", "knight" vs "night").
+        let bestParsed = null
+        let bestConfidence = 0
+        let bestRaw = finalTranscript
+
+        if (lastFinalResult) {
+          for (let alt = 0; alt < lastFinalResult.length; alt++) {
+            const altText = lastFinalResult[alt].transcript
+            // Reconstruct the full transcript with this alternative
+            const altFull = finalTranscript.replace(final, altText)
+            const parsed = parseVoiceInput(altFull, lastFinalResult[alt].confidence || speechConfidence)
+            const conf = parsed?.confidence ?? 0
+            if (conf > bestConfidence) {
+              bestConfidence = conf
+              bestParsed = parsed
+              bestRaw = altFull
+            }
+          }
+        }
+
+        // Fall back to default parsing if no alternative worked
+        if (!bestParsed) {
+          bestParsed = parseVoiceInput(finalTranscript, speechConfidence)
+          bestConfidence = bestParsed?.confidence ?? 0
+          bestRaw = finalTranscript
+        }
+
+        const parsed = bestParsed
+        const confidence = bestConfidence
 
         if (parsed && confidence >= confidenceThreshold) {
           setLastCommand(parsed.command)

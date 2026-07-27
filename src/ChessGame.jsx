@@ -173,9 +173,22 @@ const ChessGame = () => {
 
       switch (command.type) {
         case 'move': {
-          const { from, to } = command
+          const { from, to, piece } = command
           if (from && to) {
+            // Direct move: "e2 e4", "e2 to e4"
             movePiece(from, to, emitMove)
+          } else if (!from && to && piece) {
+            // Piece-to-square move: "pawn to e4", "knight to f3"
+            // Find which piece of this type can legally move to the target square
+            const allMovesToSquare = game.moves({ square: to, verbose: true })
+            const matchingMoves = allMovesToSquare.filter(m => m.piece === piece)
+            if (matchingMoves.length === 1) {
+              movePiece(matchingMoves[0].from, to, emitMove)
+            } else if (matchingMoves.length > 1) {
+              // Multiple pieces can move there — use the first valid one
+              // (could ask for clarification, but single-move is most common)
+              movePiece(matchingMoves[0].from, to, emitMove)
+            }
           } else if (from && !to) {
             setSelectedSquare(from)
           }

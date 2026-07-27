@@ -39,7 +39,8 @@ const CHESS_HOMOPHONES = new Map([
   ['bishop', 'bishop'], ['bisop', 'bishop'], ['bishup', 'bishop'],
   ['bi shop', 'bishop'], ['bish', 'bishop'], ['biscuit', 'bishop'],
   ['pawn', 'pawn'], ['pwan', 'pawn'], ['prawn', 'pawn'],
-  ['pon', 'pawn'], ['porn', 'pawn'],
+  ['pon', 'pawn'], ['porn', 'pawn'], ['pun', 'pawn'],
+  ['pown', 'pawn'], ['pom', 'pawn'], ['poin', 'pawn'],
   ['king', 'king'], ['kin', 'king'], ['keen', 'king'],
   // Action words
   ['capture', 'capture'], ['capcha', 'capture'], ['kapture', 'capture'],
@@ -56,8 +57,8 @@ const CHESS_HOMOPHONES = new Map([
   ['re sign', 'resign'], ['resigning', 'resign'],
   ['draw', 'draw'], ['door', 'draw'], ['drawn', 'draw'],
   ['offer draw', 'draw'], ['draw offer', 'draw'],
-  // Number homophones
-  ['to', '2'], ['too', '2'], ['two', '2'],
+  // Number homophones — "to" is NOT a number; it's the preposition in "pawn to e4"
+  ['two', '2'],
   ['for', '4'], ['four', '4'], ['fore', '4'],
   ['ate', '8'], ['eight', '8'],
   // Square homophones

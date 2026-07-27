@@ -188,6 +188,7 @@ function detectMove(normalized, raw) {
   }
 
   const piece = pieceResult ? pieceResult.piece : null
+  const hasTo = tokens.includes('to')
 
   // Case 1: Two squares — "e2 e4", "e2 to e4", "e2 to e5"
   if (squares.length >= 2) {
@@ -200,7 +201,20 @@ function detectMove(normalized, raw) {
     }
   }
 
-  // Case 2: One square + piece name — "knight f3" (just selecting the piece)
+  // Case 2: Piece + "to" + single square — "pawn to e4", "knight to f3"
+  // This is a move command where the source square needs to be resolved
+  // from game state (which piece of this type can move to the target).
+  if (squares.length === 1 && piece && hasTo) {
+    return {
+      type: 'move',
+      piece,
+      from: null,
+      to: squares[0],
+      confidence: pieceResult.score,
+    }
+  }
+
+  // Case 3: One square + piece name — "knight f3" (just selecting the piece)
   if (squares.length === 1 && piece) {
     return {
       type: 'select',
@@ -210,7 +224,7 @@ function detectMove(normalized, raw) {
     }
   }
 
-  // Case 3: Just one square — "e4" (square selection)
+  // Case 4: Just one square — "e4" (square selection)
   if (squares.length === 1) {
     return {
       type: 'select',

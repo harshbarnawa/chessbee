@@ -33,6 +33,11 @@ const MobileVoiceButton = React.memo(({
             {parsedDisplay.confidence.label}
           </span>
           <span className="mobile-voice-command-text">{parsedDisplay.text}</span>
+          {parsedDisplay.normalized && parsedDisplay.normalized !== parsedDisplay.raw && (
+            <span className="mobile-voice-correction">
+              — you said: "{parsedDisplay.raw}"
+            </span>
+          )}
         </div>
       )}
     </div>
