@@ -6,6 +6,7 @@ import { useSocket } from './hooks/useSocket'
 import { useVoice } from './hooks/useVoice'
 import { useTheme } from './context/ThemeContext'
 import { socket } from './socket'
+import { speakCommandFeedback, speakGameEvent } from './utils/voiceFeedback'
 
 import TopBar from './components/TopBar'
 import RoomControls from './components/RoomControls'
@@ -165,6 +166,9 @@ const ChessGame = () => {
   const handleVoiceCommand = useCallback(
     (command) => {
       if (!canMakeMove) return
+
+      // Give spoken confirmation for every command
+      speakCommandFeedback(command)
 
       switch (command.type) {
         case 'move': {
