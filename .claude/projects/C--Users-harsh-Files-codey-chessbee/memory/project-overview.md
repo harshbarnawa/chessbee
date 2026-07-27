@@ -14,7 +14,7 @@ ChessBee is a real-time multiplayer chess platform with voice-first interaction 
 - Deploy: Vercel (frontend), Render (backend at chessbylibrary.onrender.com)
 
 **Key Files:**
-- `src/ChessGame.jsx` — Monolithic 1072-line component containing ALL game logic and UI
+- `src/ChessGame.jsx` — Main game component (~430 lines)
 - `server/index.js` — Socket.io server handling rooms, moves, rematch
 - `src/socket.js` — Socket.io client singleton (hardcoded to production URL)
 - `src/index.css` — All styles in one file

@@ -94,7 +94,81 @@ Two routes, both render the same component. The presence of `roomId` param trigg
 
 ## Voice System
 
-**NOT IMPLEMENTED** - Voice interaction is the PRIMARY interaction model per the project vision but does not exist yet.
+Voice is the PRIMARY interaction model for ChessBee. The voice pipeline processes
+speech-to-text output through a multi-stage analysis chain:
+
+### Voice Pipeline Architecture
+
+```
+Speech Input → Web Speech API (SpeechRecognition)
+  → Raw Transcript + Confidence
+  → textNormalizer.js
+      ├─ Filler word removal ("um", "uh", "please", "I want to")
+      ├─ Number-word → digit replacement ("four" → "4", "five" → "5")
+      ├─ Chess homophone mapping ("green" → "queen", "rock" → "rook", "night" → "knight")
+      ├─ Square spacing normalization ("e 4" → "e4", "d five" → "d5")
+      └─ Normalized clean text
+  → fuzzyMatcher.js
+      ├─ Levenshtein distance (edit distance matching)
+      ├─ Soundex phonetic matching (words that sound alike)
+      ├─ Hybrid similarity scoring
+      ├─ Chess piece name fuzzy matching (handles "bisop", "kniht")
+      ├─ Chess action word matching ("castel", "kapter")
+      └─ Square extraction (multiple formats)
+  → voiceParser.js
+      ├─ Command type detection (move, castle, capture, promote, resign, draw, undo)
+      ├─ Confidence scoring (combines speech confidence + text confidence + match confidence)
+      └─ Returns { command, confidence, displayText }
+  → ChessGame.jsx
+      ├─ Command execution
+      └─ voiceFeedback.js (spoken confirmation via Speech Synthesis)
+```
+
+### Optional AI Fallback
+
+When local parsing confidence is below threshold, the system can optionally
+fall back to an AI-assisted parser (aiVoiceParser.js) that calls a backend
+LLM endpoint with a chess-specific system prompt. This is disabled by default.
+
+### Voice Feedback
+
+Moves are confirmed via the Web Speech Synthesis API (voiceFeedback.js):
+- "Knight to F3", "Capturing on E5", "Castling kingside"
+- Game events: "Check!", "Checkmate!"
+
+### Key Voice Files
+
+| File | Purpose |
+|------|---------|
+| `src/utils/textNormalizer.js` | Filler removal, homophone mapping, number normalization |
+| `src/utils/fuzzyMatcher.js` | Levenshtein distance, Soundex, piece/action matching |
+| `src/utils/voiceParser.js` | Main parse pipeline, confidence scoring |
+| `src/utils/aiVoiceParser.js` | Optional AI fallback with LLM system prompt |
+| `src/utils/voiceFeedback.js` | Spoken move confirmations via Speech Synthesis |
+| `src/hooks/useVoice.js` | Web Speech API lifecycle, continuous listening |
+| `src/components/VoiceControl.jsx` | Voice UI with confidence badges and feedback |
+
+### Supported Voice Formats
+
+- "Queen e2 to e4" / "Knight f3 g5" / "Bishop c4 to d5"
+- "Castle kingside" / "Castle queenside"
+- "Take e5" / "Capture d4" / "Queen takes e5"
+- "Promote to queen"
+- "Undo" / "Take back"
+- "Resign" / "Offer draw"
+- "e4" (square selection)
+
+### Common Misrecognitions Handled
+
+| What user says | Speech API might hear | Handled by |
+|----------------|----------------------|------------|
+| "queen" | "green", "clean" | Homophone map |
+| "rook" | "rock", "wreck" | Homophone map |
+| "knight" | "night", "nite" | Homophone map + Soundex |
+| "bishop" | "bisop", "bishup" | Homophone map + Levenshtein |
+| "e four" | "e four" | Square spacing normalization |
+| "to" | "two", "too" | Homophone map → "2" (filtered) |
+| "for" | "four", "fore" | Homophone map → "4" |
 
 ## Component Hierarchy
 

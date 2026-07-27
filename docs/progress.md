@@ -140,3 +140,57 @@
 ### Next Recommended Task
 - Monitor for any issues introduced in refactoring
 - Consider implementing authentication system
+
+---
+
+## Session 3 - 2024-12-01
+
+### Files Changed
+- Created `src/utils/textNormalizer.js` (filler removal, homophone mapping, number-word replacement)
+- Created `src/utils/fuzzyMatcher.js` (Levenshtein distance, Soundex phonetic matching, piece/action matching)
+- Created `src/utils/aiVoiceParser.js` (optional AI-assisted parsing with LLM system prompt)
+- Created `src/utils/voiceFeedback.js` (spoken move confirmations via Speech Synthesis API)
+- Updated `src/utils/voiceParser.js` (rewritten to use multi-stage pipeline with confidence scoring)
+- Updated `src/hooks/useVoice.js` (continuous listening, confidence thresholds, auto-restart)
+- Updated `src/components/VoiceControl.jsx` (confidence badges, parsed command display, feedback)
+- Updated `src/ChessGame.jsx` (wired voice feedback and new VoiceControl props)
+- Updated `src/index.css` (voice command display, confidence badge styles)
+- Updated `docs/architecture.md` (full voice pipeline documentation)
+- Updated `docs/decisions.md` (PD-004: voice parsing approach decision)
+- Updated `docs/roadmap.md` (new voice recognition improvement tasks)
+
+### Features Completed
+- ✅ Multi-stage voice pipeline: normalize → fuzzy match → parse → confidence score
+- ✅ Filler word removal (um, uh, like, please, I want to, etc.)
+- ✅ Number-word → digit replacement ("four" → "4", "five" → "5")
+- ✅ Chess homophone mapping (queen/green/clean, rook/rock, knight/night, bishop/bisop)
+- ✅ Square spacing normalization ("e 4" → "e4", "d five" → "d5")
+- ✅ Levenshtein distance fuzzy matching
+- ✅ Soundex phonetic matching for spoken-word similarity
+- ✅ Confidence scoring combining speech API + text quality + match quality
+- ✅ Spoken move confirmations (Web Speech Synthesis API)
+- ✅ Continuous listening mode with auto-restart
+- ✅ Confidence threshold filtering (reject low-confidence commands)
+- ✅ Visual confidence badges (High/Medium/Low) in UI
+- ✅ Parsed command display (shows what system understood vs raw speech)
+- ✅ Optional AI-assisted fallback parser module (disabled by default)
+
+### Voice Formats Now Supported
+- Natural speech: "Queen e2 to e4", "Knight f3 g5"
+- Castle: "Castle kingside", "Castle queenside", "Short castle", "Long castle"
+- Capture: "Take e5", "Capture d4", "Queen takes e5"
+- Promote: "Promote to queen"
+- Undo: "Undo", "Take back"
+- Resign/Draw: "Resign", "Offer draw"
+- Square selection: "e4" (single square)
+- Filler words automatically ignored
+
+### Commit History
+1. `feat(voice): add fuzzy matching, text normalization, and confidence scoring to voice pipeline`
+2. `feat(voice): add Soundex phonetic matching to fuzzy matcher`
+3. `feat(voice): add spoken move feedback and AI parser fallback module`
+
+### Next Recommended Task
+- Test voice pipeline with real speech on various devices
+- Implement AI endpoint on server for low-confidence fallback
+- Add mobile floating microphone button with vibration feedback

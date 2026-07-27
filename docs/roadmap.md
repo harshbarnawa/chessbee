@@ -45,6 +45,12 @@
 | 24 | ✅ Done | Low | Add lazy loading and code splitting |
 | 25 | ✅ Done | Low | Add accessibility features (ARIA labels, keyboard navigation) |
 | 26 | ⬜ Pending | Low | Add loading states and skeletons |
+| 44 | ✅ Done | High | Voice pipeline: fuzzy matching and text normalization |
+| 45 | ✅ Done | High | Voice pipeline: phonetic matching (Soundex) |
+| 46 | ✅ Done | High | Voice pipeline: confidence scoring and threshold filtering |
+| 47 | ✅ Done | Medium | Voice feedback: spoken move confirmations |
+| 48 | ✅ Done | Medium | AI-assisted parser fallback module |
+| 49 | ⬜ Pending | High | AI endpoint on server for low-confidence fallback |
 | 27 | ⬜ Pending | Low | Add hover effects and micro-interactions |
 | 28 | ⬜ Pending | Low | Add sound effects (move, capture, check, checkmate) |
 | 29 | ✅ Done | Low | Optimize bundle size and assets |

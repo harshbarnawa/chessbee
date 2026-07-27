@@ -54,4 +54,9 @@
 ### PD-003: Voice recognition engine
 **Options:** Web Speech API (browser native), Whisper API (OpenAI), Deepgram, custom model
 **Context:** Must support chess-specific vocabulary reliably.
-**Recommendation:** Web Speech API for MVP (free, no server needed), with fallback to cloud API for accuracy.
+**Decision:** Web Speech API for MVP (free, no server needed), with multi-stage client-side post-processing pipeline (normalization → fuzzy matching → confidence scoring). Optional AI-assisted parsing (aiVoiceParser.js) for future cloud fallback when local confidence is low.
+
+### PD-004: Voice parsing approach
+**Decision:** Rule-based client-side pipeline with fuzzy matching, NOT a cloud API.
+**Why:** Zero latency, works offline, no API costs. The multi-stage pipeline (normalize → fuzzy match → parse → score) handles common speech misrecognitions (queen/green, rook/rock, knight/night) without any server round-trips. AI-assisted parsing is optional for low-confidence fallback.
+**Trade-off:** Less flexible than an LLM-based approach, but the bounded chess domain (6 piece types, 64 squares, ~10 commands) maps well to deterministic parsing with fuzzy tolerance.
