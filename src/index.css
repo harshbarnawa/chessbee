@@ -904,6 +904,61 @@ body{
   font-size:10px;
 }
 
+/* Voice Command Display */
+.voice-command-display{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:4px;
+  padding:10px 14px;
+  background:rgba(129,199,132,0.12);
+  border:1px solid rgba(129,199,132,0.25);
+  border-radius:var(--radius-sm);
+  font-size:13px;
+}
+
+.voice-command-display.voice-rejected{
+  background:rgba(255,183,77,0.1);
+  border-color:rgba(255,183,77,0.2);
+}
+
+.voice-command-text{
+  color:var(--text);
+  font-weight:500;
+}
+
+.voice-confidence{
+  display:inline-block;
+  font-size:10px;
+  font-weight:600;
+  letter-spacing:0.5px;
+  text-transform:uppercase;
+  padding:2px 8px;
+  border-radius:10px;
+}
+
+.voice-confidence.confidence-high{
+  color:#81c784;
+  background:rgba(129,199,132,0.15);
+}
+
+.voice-confidence.confidence-medium{
+  color:#ffb74d;
+  background:rgba(255,183,77,0.15);
+}
+
+.voice-confidence.confidence-low{
+  color:#e57373;
+  background:rgba(229,115,115,0.15);
+}
+
+.voice-normalized-hint{
+  font-size:11px;
+  color:var(--text-muted);
+  font-style:italic;
+  margin-top:2px;
+}
+
 /* Theme Selector */
 .theme-selector{
   position:relative;

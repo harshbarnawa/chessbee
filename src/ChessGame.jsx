@@ -255,6 +255,7 @@ const ChessGame = () => {
     transcript,
     interimTranscript,
     error: voiceError,
+    parsedDisplay,
     toggleListening,
     clearError,
   } = useVoice(handleVoiceCommand)
@@ -376,6 +377,7 @@ const ChessGame = () => {
             transcript={transcript}
             interimTranscript={interimTranscript}
             error={voiceError}
+            parsedDisplay={parsedDisplay}
             onToggleListening={toggleListening}
             onClearError={clearError}
           />

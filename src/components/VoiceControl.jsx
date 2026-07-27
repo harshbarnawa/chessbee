@@ -6,6 +6,7 @@ const VoiceControl = React.memo(({
   transcript,
   interimTranscript,
   error,
+  parsedDisplay,
   onToggleListening,
   onClearError,
 }) => {
@@ -56,10 +57,34 @@ const VoiceControl = React.memo(({
           {interimTranscript && (
             <span className="voice-interim">{interimTranscript}</span>
           )}
-          {transcript && (
-            <span className="voice-transcript">{transcript}</span>
+        </div>
+      )}
+
+      {/* Parsed command display (shown after recognition) */}
+      {parsedDisplay && !isListening && (
+        <div className={`voice-command-display ${parsedDisplay.rejected ? 'voice-rejected' : ''}`}>
+          <span className={`voice-confidence ${parsedDisplay.confidence.className}`}>
+            {parsedDisplay.confidence.label}
+          </span>
+          <span className="voice-command-text">
+            {parsedDisplay.text}
+          </span>
+          {parsedDisplay.normalized && parsedDisplay.normalized !== parsedDisplay.raw && (
+            <span className="voice-normalized-hint">
+              — heard: "{parsedDisplay.raw}"
+            </span>
           )}
         </div>
+      )}
+
+      {/* Show full transcript while listening */}
+      {transcript && isListening && (
+        <div className="voice-transcript">{transcript}</div>
+      )}
+
+      {/* Show raw transcript briefly after recognition (if parsed differently) */}
+      {transcript && !isListening && !parsedDisplay?.normalized && (
+        <div className="voice-transcript">{transcript}</div>
       )}
 
       {error && (
