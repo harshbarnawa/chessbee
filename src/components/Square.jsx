@@ -1,10 +1,7 @@
 import React from 'react'
-import { usePieceTheme } from '../context/PieceThemeContext'
+import { createPieceSvg } from '../utils/chessPieces'
 
-const Square = React.memo(({ square, piece, isDark, isSelected, isValidMove, isKingInCheck, onClick, showRankLabel, showFileLabel }) => {
-  const { pieceSymbols } = usePieceTheme()
-  const svg = piece ? pieceSymbols[piece.color]?.[piece.type] : ''
-
+const Square = React.memo(({ square, piece, isDark, isSelected, isValidMove, isKingInCheck, pieceSymbols, onClick, showRankLabel, showFileLabel }) => {
   return (
     <div
       role="gridcell"
@@ -20,7 +17,10 @@ const Square = React.memo(({ square, piece, isDark, isSelected, isValidMove, isK
       {piece && (
         <span
           className={`piece ${piece.color === 'w' ? 'white-piece' : 'black-piece'}`}
-          dangerouslySetInnerHTML={{ __html: svg }}
+          dangerouslySetInnerHTML={{
+            __html: pieceSymbols[piece.color]?.[piece.type]
+              || createPieceSvg(piece.type, piece.color)
+          }}
         />
       )}
     </div>

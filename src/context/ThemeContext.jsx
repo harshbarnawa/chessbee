@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
+import { createPieceSvg, STYLES } from '../utils/chessPieces'
 
 const ThemeContext = createContext()
 
@@ -165,17 +166,43 @@ export const BOARD_THEMES = {
   },
 }
 
+// Generate all piece SVGs for a given style
+function generatePieces(style) {
+  const pieces = { w: { k: '', q: '', r: '', b: '', n: '', p: '' }, b: { k: '', q: '', r: '', b: '', n: '', p: '' } }
+  ;['w', 'b'].forEach(c => {
+    ;['k', 'q', 'r', 'b', 'n', 'p'].forEach(t => {
+      pieces[c][t] = createPieceSvg(t, c, style)
+    })
+  })
+  return pieces
+}
+
+// Build PIECE_STYLES from STYLES definitions
+export const PIECE_STYLES = Object.fromEntries(
+  Object.entries(STYLES).map(([key, def]) => [key, { name: def.name, pieces: generatePieces(key) }])
+)
+
 export function ThemeProvider({ children }) {
   const [boardTheme, setBoardTheme] = useState(() => {
     const saved = localStorage.getItem('chessbee-board-theme')
     return saved && BOARD_THEMES[saved] ? saved : 'green'
   })
 
+  const [pieceStyle, setPieceStyle] = useState(() => {
+    const saved = localStorage.getItem('chessbee-piece-style')
+    return saved && PIECE_STYLES[saved] ? saved : 'classic'
+  })
+
   useEffect(() => {
     localStorage.setItem('chessbee-board-theme', boardTheme)
   }, [boardTheme])
 
+  useEffect(() => {
+    localStorage.setItem('chessbee-piece-style', pieceStyle)
+  }, [pieceStyle])
+
   const currentTheme = BOARD_THEMES[boardTheme] || BOARD_THEMES.green
+  const currentPieces = PIECE_STYLES[pieceStyle] || PIECE_STYLES.classic
 
   useEffect(() => {
     const root = document.documentElement
@@ -190,8 +217,12 @@ export function ThemeProvider({ children }) {
     <ThemeContext.Provider value={{
       boardTheme,
       setBoardTheme,
+      pieceStyle,
+      setPieceStyle,
       currentTheme,
+      currentPieces,
       boardThemes: BOARD_THEMES,
+      pieceStyles: PIECE_STYLES,
     }}>
       {children}
     </ThemeContext.Provider>
@@ -200,6 +231,8 @@ export function ThemeProvider({ children }) {
 
 export function useTheme() {
   const context = useContext(ThemeContext)
-  if (!context) throw new Error('useTheme must be used within ThemeProvider')
+  if (!context) {
+    throw new Error('useTheme must be used within a ThemeProvider')
+  }
   return context
 }

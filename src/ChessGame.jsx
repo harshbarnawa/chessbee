@@ -5,7 +5,6 @@ import { useTimer } from './hooks/useTimer'
 import { useSocket } from './hooks/useSocket'
 import { useVoice } from './hooks/useVoice'
 import { useTheme } from './context/ThemeContext'
-import { usePieceTheme } from './context/PieceThemeContext'
 import { socket } from './socket'
 import { speakCommandFeedback, speakGameEvent } from './utils/voiceFeedback'
 
@@ -54,9 +53,11 @@ const ChessGame = () => {
     gameEnded,
     turn,
     canUndo,
+    pieceSymbols: defaultPieceSymbols,
   } = useChessGame()
 
-  const { pieceSymbols } = usePieceTheme()
+  const { currentPieces } = useTheme()
+  const pieceSymbols = currentPieces.pieces
 
   const {
     playerColor,
