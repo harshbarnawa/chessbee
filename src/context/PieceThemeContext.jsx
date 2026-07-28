@@ -2,7 +2,6 @@ import React, { createContext, useContext, useState, useEffect } from 'react'
 
 const PieceThemeContext = createContext()
 
-// 4 professionally designed open-source piece sets (CBurnett, Merida, Alpha, Maestro)
 export const PIECE_THEMES = ['cburnett', 'merida', 'alpha', 'maestro']
 
 export const PIECE_THEME_NAMES = {
@@ -12,12 +11,32 @@ export const PIECE_THEME_NAMES = {
   maestro: { name: 'Maestro', icon: '♜' },
 }
 
+/** Unicode fallback — used when SVG fails to load */
+export const UNICODE_PIECES = {
+  w: { k: '♔', q: '♕', r: '♖', b: '♗', n: '♘', p: '♙' },
+  b: { k: '♚', q: '♛', r: '♜', b: '♝', n: '♞', p: '♟' },
+}
+
 const PIECE_KEYS = ['wk','wq','wr','wb','wn','wp','bk','bq','br','bb','bn','bp']
 
 /**
- * Loads all piece SVGs for all themes into a cache on app init.
- * ~48 small SVGs, ~100KB total — fetched once, then theme switches are instant.
+ * Strip XML/DOCTYPE declarations and enforce 100% sizing + viewBox.
+ * This ensures every SVG works with dangerouslySetInnerHTML regardless of source.
  */
+function normalizeSvg(svg) {
+  if (!svg || typeof svg !== 'string') return ''
+  let s = svg
+    .replace(/<\?xml[^>]*\?>/g, '')              // XML declaration
+    .replace(/<!DOCTYPE[^>]*>/g, '')              // DOCTYPE
+    .replace(/<!--[\s\S]*?-->/g, '')              // HTML comments
+    .replace(/\bwidth\s*=\s*"[^"]*"/i, 'width="100%"')
+    .replace(/\bheight\s*=\s*"[^"]*"/i, 'height="100%"')
+  if (!s.includes('viewBox')) {
+    s = s.replace('<svg', '<svg viewBox="0 0 45 45"')
+  }
+  return s
+}
+
 async function loadAllPieces() {
   const cache = {}
   const results = await Promise.allSettled(
@@ -30,31 +49,24 @@ async function loadAllPieces() {
           })
           .then(svg => {
             if (!cache[theme]) cache[theme] = {}
-            cache[theme][piece] = svg
+            cache[theme][piece] = normalizeSvg(svg)
           })
       )
     )
   )
-  // Log any failures
-  results.forEach((r, i) => {
-    if (r.status === 'rejected') {
-      console.warn('[PieceTheme]', r.reason?.message || 'Unknown fetch error')
-    }
+  results.forEach(r => {
+    if (r.status === 'rejected') console.warn('[PieceTheme]', r.reason?.message)
   })
   return cache
 }
 
-/**
- * Builds a nested symbols object from flat cache:
- * { w: { k: '<svg>', q: '<svg>', ... }, b: { k: '<svg>', ... } }
- */
 function buildPieceSymbols(cache, theme) {
   const themeCache = cache?.[theme]
   const symbols = { w: {}, b: {} }
   if (!themeCache) return symbols
   PIECE_KEYS.forEach(key => {
-    const color = key[0]  // 'w' or 'b'
-    const type = key[1]   // 'k', 'q', 'r', 'b', 'n', 'p'
+    const color = key[0]
+    const type = key[1]
     symbols[color][type] = themeCache[key] || ''
   })
   return symbols
@@ -63,13 +75,12 @@ function buildPieceSymbols(cache, theme) {
 export function PieceThemeProvider({ children }) {
   const [cache, setCache] = useState(null)
   const [theme, setTheme] = useState('cburnett')
-  const [loading, setLoading] = useState(true)
+  const [ready, setReady] = useState(false)
 
-  // Load all pieces on mount
   useEffect(() => {
     loadAllPieces().then(c => {
       setCache(c)
-      setLoading(false)
+      setReady(true)
     })
   }, [])
 
@@ -80,7 +91,7 @@ export function PieceThemeProvider({ children }) {
       pieceTheme: theme,
       setPieceTheme: setTheme,
       pieceSymbols,
-      loading,
+      ready,
       pieceThemes: PIECE_THEMES,
     }}>
       {children}

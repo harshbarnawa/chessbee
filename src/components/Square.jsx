@@ -1,9 +1,12 @@
 import React from 'react'
-import { usePieceTheme } from '../context/PieceThemeContext'
+import { usePieceTheme, UNICODE_PIECES } from '../context/PieceThemeContext'
 
 const Square = React.memo(({ square, piece, isDark, isSelected, isValidMove, isKingInCheck, onClick, showRankLabel, showFileLabel }) => {
-  const { pieceSymbols } = usePieceTheme()
-  const svg = piece ? pieceSymbols[piece.color]?.[piece.type] : ''
+  const { pieceSymbols, ready } = usePieceTheme()
+
+  // Get SVG (or blank if still loading), fallback to unicode
+  const svg = piece ? (pieceSymbols[piece.color]?.[piece.type] || '') : ''
+  const unicode = piece ? (UNICODE_PIECES[piece.color]?.[piece.type] || '') : ''
 
   return (
     <div
@@ -20,7 +23,7 @@ const Square = React.memo(({ square, piece, isDark, isSelected, isValidMove, isK
       {piece && (
         <span
           className={`piece ${piece.color === 'w' ? 'white-piece' : 'black-piece'}`}
-          dangerouslySetInnerHTML={{ __html: svg }}
+          dangerouslySetInnerHTML={{ __html: svg || unicode }}
         />
       )}
     </div>
