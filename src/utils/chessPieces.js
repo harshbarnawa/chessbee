@@ -185,10 +185,26 @@ const STYLES = {
   },
 }
 
+// ── Type Mapping (single-letter → shape key) ─────────────────────────
+const TYPE_MAP = { k: 'king', q: 'queen', r: 'rook', b: 'bishop', n: 'knight', p: 'pawn' }
+
 // ── SVG Generator ────────────────────────────────────────────────────
 
 function createPieceSvg(type, color, style = 'classic') {
-  const s = STYLES[style] || STYLES.classic
+  // Validate + resolve type
+  const shapeKey = TYPE_MAP[type]
+  if (!shapeKey || !SHAPES[shapeKey]) {
+    console.warn(`[chessPieces] Invalid piece type: "${type}", falling back to pawn`)
+    return createPieceSvg('p', color, style)
+  }
+
+  // Validate style
+  const s = STYLES[style]
+  if (!s) {
+    console.warn(`[chessPieces] Invalid piece style: "${style}", falling back to classic`)
+    return createPieceSvg(type, color, 'classic')
+  }
+
   const p = s[color] || s.w
   const effect = s.effect || 'solid'
   const id = uid('p')
@@ -230,7 +246,7 @@ function createPieceSvg(type, color, style = 'classic') {
     // solid and outline: no defs needed
   }
 
-  const inner = SHAPES[type]({ ...p, fill })
+  const inner = SHAPES[shapeKey]({ ...p, fill })
 
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45" width="100%" height="100%">
     <defs>${defs}</defs>
