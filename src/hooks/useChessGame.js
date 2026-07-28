@@ -92,6 +92,18 @@ export function useChessGame() {
         setGameStarted(true)
         setSelectedSquare(null)
 
+        // Local game-over detection (server confirms for multiplayer)
+        if (gameCopy.isGameOver()) {
+          if (gameCopy.isCheckmate()) {
+            setWinner(gameCopy.turn() === 'w' ? 'Black' : 'White')
+            setGameStatus('checkmate')
+          } else if (gameCopy.isStalemate()) {
+            setGameStatus('stalemate')
+          } else if (gameCopy.isDraw()) {
+            setGameStatus('draw')
+          }
+        }
+
         // Send to server for validation and broadcast
         if (emitMove) {
           emitMove({ from, to, promotion: 'q' })
