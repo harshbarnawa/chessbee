@@ -20,6 +20,14 @@ export const BOARD_THEMES = {
     valid: 'rgba(255,255,255,0.22)',
     check: '#e57373',
   },
+  chesscom: {
+    name: 'Chess.com',
+    light: '#E8F0D8',
+    dark: '#779556',
+    selected: 'rgba(255,214,10,0.35)',
+    valid: 'rgba(255,255,255,0.22)',
+    check: '#e57373',
+  },
   midnight: {
     name: 'Midnight',
     light: '#dee3e6',
@@ -54,28 +62,37 @@ export const BOARD_THEMES = {
   },
 }
 
-// Build SVG pieces from the utility
-const svgPieces = {
-  w: { k: '', q: '', r: '', b: '', n: '', p: '' },
-  b: { k: '', q: '', r: '', b: '', n: '', p: '' },
-}
-;['w', 'b'].forEach(c => {
-  ;['k', 'q', 'r', 'b', 'n', 'p'].forEach(t => {
-    svgPieces[c][t] = createPieceSvg(t, c)
+// Generate SVG pieces for a given style
+function generatePieces(style) {
+  const pieces = { w: { k: '', q: '', r: '', b: '', n: '', p: '' }, b: { k: '', q: '', r: '', b: '', n: '', p: '' } }
+  ;['w', 'b'].forEach(c => {
+    ;['k', 'q', 'r', 'b', 'n', 'p'].forEach(t => {
+      pieces[c][t] = createPieceSvg(t, c, style)
+    })
   })
-})
+  return pieces
+}
 
 export const PIECE_STYLES = {
-  svg: {
-    name: 'Premium',
-    pieces: svgPieces,
+  classic: {
+    name: 'Classic',
+    pieces: generatePieces('classic'),
   },
-  unicode: {
-    name: 'Classic Unicode',
-    pieces: {
-      w: { k: '♔', q: '♕', r: '♖', b: '♗', n: '♘', p: '♙' },
-      b: { k: '♚', q: '♛', r: '♜', b: '♝', n: '♞', p: '♟' },
-    },
+  chesscom: {
+    name: 'Chess.com',
+    pieces: generatePieces('chesscom'),
+  },
+  wood: {
+    name: 'Wood',
+    pieces: generatePieces('wood'),
+  },
+  glass: {
+    name: 'Glass',
+    pieces: generatePieces('glass'),
+  },
+  metal: {
+    name: 'Metal',
+    pieces: generatePieces('metal'),
   },
 }
 
@@ -87,7 +104,7 @@ export function ThemeProvider({ children }) {
 
   const [pieceStyle, setPieceStyle] = useState(() => {
     const saved = localStorage.getItem('chessbee-piece-style')
-    return saved && PIECE_STYLES[saved] ? saved : 'svg'
+    return saved && PIECE_STYLES[saved] ? saved : 'classic'
   })
 
   useEffect(() => {
@@ -99,7 +116,7 @@ export function ThemeProvider({ children }) {
   }, [pieceStyle])
 
   const currentTheme = BOARD_THEMES[boardTheme] || BOARD_THEMES.golden
-  const currentPieces = PIECE_STYLES[pieceStyle] || PIECE_STYLES.unicode
+  const currentPieces = PIECE_STYLES[pieceStyle] || PIECE_STYLES.classic
 
   useEffect(() => {
     const root = document.documentElement
