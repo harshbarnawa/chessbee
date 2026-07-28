@@ -175,6 +175,32 @@ const ChessGame = () => {
     return success
   }, [movePiece, emitMove])
 
+  // ── Resign Handler ────────────────────────────────────────────────
+  const handleResign = useCallback(() => {
+    if (roomId) {
+      // Multiplayer: notify opponent via socket
+      emitResign()
+    } else {
+      // Local: set winner directly
+      setWinner(turn === 'w' ? 'Black' : 'White')
+    }
+  }, [roomId, emitResign, turn, setWinner])
+
+  // ── Draw Offer Handler ────────────────────────────────────────────
+  const handleDrawOffer = useCallback(() => {
+    if (roomId) {
+      offerDraw()
+    }
+  }, [roomId, offerDraw])
+
+  const handleAcceptDraw = useCallback(() => {
+    acceptDraw()
+  }, [acceptDraw])
+
+  const handleDeclineDraw = useCallback(() => {
+    declineDraw()
+  }, [declineDraw])
+
   // ── Voice Commands ─────────────────────────────────────────────────
   const handleVoiceCommand = useCallback(
     (command) => {
@@ -329,32 +355,6 @@ const ChessGame = () => {
     setGameStarted(false)
     requestRematch()
   }, [resetGame, resetTimers, setGameStarted, requestRematch])
-
-  // ── Resign Handler ────────────────────────────────────────────────
-  const handleResign = useCallback(() => {
-    if (roomId) {
-      // Multiplayer: notify opponent via socket
-      emitResign()
-    } else {
-      // Local: set winner directly
-      setWinner(turn === 'w' ? 'Black' : 'White')
-    }
-  }, [roomId, emitResign, turn, setWinner])
-
-  // ── Draw Offer Handler ────────────────────────────────────────────
-  const handleDrawOffer = useCallback(() => {
-    if (roomId) {
-      offerDraw()
-    }
-  }, [roomId, offerDraw])
-
-  const handleAcceptDraw = useCallback(() => {
-    acceptDraw()
-  }, [acceptDraw])
-
-  const handleDeclineDraw = useCallback(() => {
-    declineDraw()
-  }, [declineDraw])
 
   // ── Leave Room ────────────────────────────────────────────────────
   const handleLeave = useCallback(() => {
