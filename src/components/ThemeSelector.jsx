@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { useTheme, BOARD_THEMES, PIECE_STYLES } from '../context/ThemeContext'
-import { createPieceSvg } from '../utils/chessPieces'
+import { useTheme, BOARD_THEMES } from '../context/ThemeContext'
+import { usePieceTheme, PIECE_THEME_NAMES } from '../context/PieceThemeContext'
 
 const THEME_ICONS = {
   green: '🌿', wood: '🪵', glass: '💎', brown: '🟫', icysea: '🧊',
@@ -10,16 +10,9 @@ const THEME_ICONS = {
   burledwood: '🌲', darkblue: '🌙',
 }
 
-const PIECE_ICONS = {
-  neo: '💠', classic: '♚', wood: '🪵', glass: '💎', metal: '⚙️',
-  marble: '🏛️', gothic: '🕯️', '8bit': '🕹️', tournament: '🏆',
-  book: '📖', icysea: '🧊', newspaper: '📰', sky: '☀️', walnut: '🌰',
-  purple: '🔮', dash: '⚡', bases: '⚾', lolz: '🎉', burledwood: '🌲',
-  translucent: '✨',
-}
-
 const ThemeSelector = React.memo(() => {
-  const { boardTheme, setBoardTheme, pieceStyle, setPieceStyle } = useTheme()
+  const { boardTheme, setBoardTheme } = useTheme()
+  const { pieceTheme, setPieceTheme, pieceSymbols, loading } = usePieceTheme()
   const [isOpen, setIsOpen] = useState(false)
   const [activeTab, setActiveTab] = useState('board')
   const dropdownRef = useRef(null)
@@ -88,31 +81,35 @@ const ThemeSelector = React.memo(() => {
             </div>
           )}
 
-          {/* Piece Styles Grid */}
+          {/* Piece Themes Grid */}
           {activeTab === 'piece' && (
             <div className="theme-grid-section">
-              <div className="theme-grid">
-                {Object.entries(PIECE_STYLES).map(([key, style]) => (
-                  <button
-                    key={key}
-                    className={`theme-card theme-card-piece ${pieceStyle === key ? 'theme-card-active' : ''}`}
-                    onClick={() => { setPieceStyle(key) }}
-                    title={style.name}
-                  >
-                    <span className="piece-card-previews">
-                      <span
-                        className="piece-card-svg"
-                        dangerouslySetInnerHTML={{ __html: createPieceSvg('k', 'w', key) }}
-                      />
-                      <span
-                        className="piece-card-svg piece-card-dark"
-                        dangerouslySetInnerHTML={{ __html: createPieceSvg('k', 'b', key) }}
-                      />
-                    </span>
-                    <span className="theme-card-name">{style.name}</span>
-                  </button>
-                ))}
-              </div>
+              {loading ? (
+                <div className="theme-loading">Loading pieces...</div>
+              ) : (
+                <div className="theme-grid">
+                  {Object.entries(PIECE_THEME_NAMES).map(([key, meta]) => (
+                    <button
+                      key={key}
+                      className={`theme-card theme-card-piece ${pieceTheme === key ? 'theme-card-active' : ''}`}
+                      onClick={() => { setPieceTheme(key) }}
+                      title={meta.name}
+                    >
+                      <span className="piece-card-previews">
+                        <span
+                          className="piece-card-svg"
+                          dangerouslySetInnerHTML={{ __html: pieceSymbols.w.k }}
+                        />
+                        <span
+                          className="piece-card-svg piece-card-dark"
+                          dangerouslySetInnerHTML={{ __html: pieceSymbols.b.k }}
+                        />
+                      </span>
+                      <span className="theme-card-name">{meta.name}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>
