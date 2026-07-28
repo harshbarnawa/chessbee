@@ -2,9 +2,20 @@ import React, { useState, useRef, useEffect } from 'react'
 import { useTheme, BOARD_THEMES, PIECE_STYLES } from '../context/ThemeContext'
 import { createPieceSvg } from '../utils/chessPieces'
 
-// Generate a small king SVG preview for each piece style
-function getKingPreview(styleKey) {
-  return createPieceSvg('k', 'w', styleKey)
+const THEME_ICONS = {
+  green: '🌿', wood: '🪵', glass: '💎', brown: '🟫', icysea: '🧊',
+  newspaper: '📰', walnut: '🌰', sky: '☀️', lolz: '🎉', stone: '🪨',
+  bases: '⚾', '8bit': '🕹️', marble: '🏛️', purple: '🔮',
+  translucent: '✨', metal: '⚙️', tournament: '🏆', dash: '⚡',
+  burledwood: '🌲', darkblue: '🌙',
+}
+
+const PIECE_ICONS = {
+  neo: '💠', classic: '♚', wood: '🪵', glass: '💎', metal: '⚙️',
+  marble: '🏛️', gothic: '🕯️', '8bit': '🕹️', tournament: '🏆',
+  book: '📖', icysea: '🧊', newspaper: '📰', sky: '☀️', walnut: '🌰',
+  purple: '🔮', dash: '⚡', bases: '⚾', lolz: '🎉', burledwood: '🌲',
+  translucent: '✨',
 }
 
 const ThemeSelector = React.memo(() => {
@@ -13,7 +24,6 @@ const ThemeSelector = React.memo(() => {
   const [activeTab, setActiveTab] = useState('board')
   const dropdownRef = useRef(null)
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     if (!isOpen) return
     const handleClick = (e) => {
@@ -30,7 +40,7 @@ const ThemeSelector = React.memo(() => {
       <button
         className="theme-toggle"
         onClick={() => setIsOpen(!isOpen)}
-        title="Board & Piece Theme"
+        title="Board & Piece Themes"
         aria-label="Change board and piece theme"
         aria-expanded={isOpen}
       >
@@ -38,70 +48,71 @@ const ThemeSelector = React.memo(() => {
       </button>
 
       {isOpen && (
-        <div className="theme-dropdown theme-dropdown-wide">
+        <div className="theme-dropdown theme-dropdown-xl">
           {/* Tab bar */}
           <div className="theme-tabs">
             <button
               className={`theme-tab ${activeTab === 'board' ? 'theme-tab-active' : ''}`}
               onClick={() => setActiveTab('board')}
             >
-              Board
+              <span className="tab-icon">🎨</span> Board
             </button>
             <button
               className={`theme-tab ${activeTab === 'piece' ? 'theme-tab-active' : ''}`}
               onClick={() => setActiveTab('piece')}
             >
-              Pieces
+              <span className="tab-icon">♟</span> Pieces
             </button>
           </div>
 
-          {/* Board Themes */}
+          {/* Board Themes Grid */}
           {activeTab === 'board' && (
-            <div className="theme-section">
-              <div className="theme-dropdown-title">Board Theme</div>
-              {Object.entries(BOARD_THEMES).map(([key, theme]) => (
-                <button
-                  key={key}
-                  className={`theme-option ${boardTheme === key ? 'theme-active' : ''}`}
-                  onClick={() => {
-                    setBoardTheme(key)
-                  }}
-                >
-                  <span className="theme-preview">
-                    <span className="theme-swatch" style={{ background: theme.light }} />
-                    <span className="theme-swatch" style={{ background: theme.dark }} />
-                  </span>
-                  <span className="theme-name">{theme.name}</span>
-                </button>
-              ))}
+            <div className="theme-grid-section">
+              <div className="theme-grid">
+                {Object.entries(BOARD_THEMES).map(([key, theme]) => (
+                  <button
+                    key={key}
+                    className={`theme-card ${boardTheme === key ? 'theme-card-active' : ''}`}
+                    onClick={() => { setBoardTheme(key) }}
+                    title={theme.name}
+                  >
+                    <span className="theme-card-icon">{THEME_ICONS[key] || '🎨'}</span>
+                    <span className="theme-card-swatches">
+                      <span className="theme-card-swatch" style={{ background: theme.light }} />
+                      <span className="theme-card-swatch" style={{ background: theme.dark }} />
+                    </span>
+                    <span className="theme-card-name">{theme.name}</span>
+                  </button>
+                ))}
+              </div>
             </div>
           )}
 
-          {/* Piece Themes */}
+          {/* Piece Styles Grid */}
           {activeTab === 'piece' && (
-            <div className="theme-section">
-              <div className="theme-dropdown-title">Piece Style</div>
-              {Object.entries(PIECE_STYLES).map(([key, style]) => (
-                <button
-                  key={key}
-                  className={`theme-option piece-theme-option ${pieceStyle === key ? 'theme-active' : ''}`}
-                  onClick={() => {
-                    setPieceStyle(key)
-                  }}
-                >
-                  <span className="piece-theme-preview">
-                    <span
-                      className="piece-preview-svg"
-                      dangerouslySetInnerHTML={{ __html: getKingPreview(key) }}
-                    />
-                    <span
-                      className="piece-preview-svg piece-preview-dark"
-                      dangerouslySetInnerHTML={{ __html: createPieceSvg('k', 'b', key) }}
-                    />
-                  </span>
-                  <span className="theme-name">{style.name}</span>
-                </button>
-              ))}
+            <div className="theme-grid-section">
+              <div className="theme-grid">
+                {Object.entries(PIECE_STYLES).map(([key, style]) => (
+                  <button
+                    key={key}
+                    className={`theme-card theme-card-piece ${pieceStyle === key ? 'theme-card-active' : ''}`}
+                    onClick={() => { setPieceStyle(key) }}
+                    title={style.name}
+                  >
+                    <span className="piece-card-previews">
+                      <span
+                        className="piece-card-svg"
+                        dangerouslySetInnerHTML={{ __html: createPieceSvg('k', 'w', key) }}
+                      />
+                      <span
+                        className="piece-card-svg piece-card-dark"
+                        dangerouslySetInnerHTML={{ __html: createPieceSvg('k', 'b', key) }}
+                      />
+                    </span>
+                    <span className="theme-card-name">{style.name}</span>
+                  </button>
+                ))}
+              </div>
             </div>
           )}
         </div>

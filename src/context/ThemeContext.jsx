@@ -1,68 +1,172 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
-import { createPieceSvg } from '../utils/chessPieces'
+import { createPieceSvg, STYLES } from '../utils/chessPieces'
 
 const ThemeContext = createContext()
 
 export const BOARD_THEMES = {
-  classic: {
-    name: 'Classic',
-    light: '#f0d9b5',
-    dark: '#b58863',
-    selected: 'rgba(255,214,10,0.35)',
-    valid: 'rgba(255,255,255,0.22)',
-    check: '#e57373',
-  },
-  golden: {
-    name: 'Golden Bee',
-    light: '#f0d9b5',
-    dark: '#ebb331',
-    selected: 'rgba(255,214,10,0.35)',
-    valid: 'rgba(255,255,255,0.22)',
-    check: '#e57373',
-  },
-  chesscom: {
-    name: 'Chess.com',
-    light: '#E8F0D8',
-    dark: '#779556',
-    selected: 'rgba(255,214,10,0.35)',
-    valid: 'rgba(255,255,255,0.22)',
-    check: '#e57373',
-  },
-  midnight: {
-    name: 'Midnight',
-    light: '#dee3e6',
-    dark: '#8ca2ad',
-    selected: 'rgba(100,200,100,0.35)',
-    valid: 'rgba(255,255,255,0.22)',
-    check: '#e57373',
-  },
-  forest: {
-    name: 'Forest',
-    light: '#eeeed2',
+  green: {
+    name: 'Green',
+    light: '#EEEED2',
     dark: '#769656',
+    selected: 'rgba(255,214,10,0.35)',
+    valid: 'rgba(255,255,255,0.22)',
+    check: '#e57373',
+  },
+  wood: {
+    name: 'Wood',
+    light: '#F0D9B5',
+    dark: '#B58863',
+    selected: 'rgba(255,214,10,0.35)',
+    valid: 'rgba(255,255,255,0.22)',
+    check: '#e57373',
+  },
+  glass: {
+    name: 'Glass',
+    light: '#EAF7F7',
+    dark: '#78A6A8',
+    selected: 'rgba(100,200,200,0.35)',
+    valid: 'rgba(255,255,255,0.22)',
+    check: '#e57373',
+  },
+  brown: {
+    name: 'Brown',
+    light: '#E8D2B0',
+    dark: '#8B5A3C',
+    selected: 'rgba(255,214,10,0.35)',
+    valid: 'rgba(255,255,255,0.22)',
+    check: '#e57373',
+  },
+  icysea: {
+    name: 'Icy Sea',
+    light: '#EAFBFF',
+    dark: '#5B97A8',
+    selected: 'rgba(100,180,220,0.35)',
+    valid: 'rgba(255,255,255,0.22)',
+    check: '#e57373',
+  },
+  newspaper: {
+    name: 'Newspaper',
+    light: '#F3F3F3',
+    dark: '#8C8C8C',
+    selected: 'rgba(150,150,150,0.35)',
+    valid: 'rgba(255,255,255,0.22)',
+    check: '#e57373',
+  },
+  walnut: {
+    name: 'Walnut',
+    light: '#E3C8A3',
+    dark: '#6A4634',
+    selected: 'rgba(255,214,10,0.35)',
+    valid: 'rgba(255,255,255,0.22)',
+    check: '#e57373',
+  },
+  sky: {
+    name: 'Sky',
+    light: '#EAF5FF',
+    dark: '#5A8CCF',
+    selected: 'rgba(100,160,240,0.35)',
+    valid: 'rgba(255,255,255,0.22)',
+    check: '#e57373',
+  },
+  lolz: {
+    name: 'Lolz',
+    light: '#FFF68F',
+    dark: '#FF69B4',
+    selected: 'rgba(255,180,200,0.35)',
+    valid: 'rgba(255,255,255,0.22)',
+    check: '#e57373',
+  },
+  stone: {
+    name: 'Stone',
+    light: '#E0E0E0',
+    dark: '#757575',
+    selected: 'rgba(150,150,150,0.35)',
+    valid: 'rgba(255,255,255,0.22)',
+    check: '#e57373',
+  },
+  bases: {
+    name: 'Bases',
+    light: '#F6F1E3',
+    dark: '#5A4C3A',
+    selected: 'rgba(255,214,10,0.35)',
+    valid: 'rgba(255,255,255,0.22)',
+    check: '#e57373',
+  },
+  '8bit': {
+    name: '8-Bit',
+    light: '#F5E6A8',
+    dark: '#6E8B3D',
     selected: 'rgba(255,214,10,0.35)',
     valid: 'rgba(255,255,255,0.22)',
     check: '#e57373',
   },
   marble: {
     name: 'Marble',
-    light: '#f0f0f0',
-    dark: '#6d8a6d',
-    selected: 'rgba(100,150,255,0.35)',
+    light: '#F8F8F8',
+    dark: '#9B9B9B',
+    selected: 'rgba(150,150,150,0.35)',
     valid: 'rgba(255,255,255,0.22)',
     check: '#e57373',
   },
-  rosewood: {
-    name: 'Rosewood',
-    light: '#f5d5c8',
-    dark: '#b0522f',
+  purple: {
+    name: 'Purple',
+    light: '#F1E5FF',
+    dark: '#7B4FA3',
+    selected: 'rgba(160,120,220,0.35)',
+    valid: 'rgba(255,255,255,0.22)',
+    check: '#e57373',
+  },
+  translucent: {
+    name: 'Translucent',
+    light: 'rgba(255,255,255,0.5)',
+    dark: 'rgba(102,102,102,0.5)',
+    selected: 'rgba(150,150,150,0.35)',
+    valid: 'rgba(255,255,255,0.22)',
+    check: '#e57373',
+  },
+  metal: {
+    name: 'Metal',
+    light: '#E4E4E4',
+    dark: '#686868',
+    selected: 'rgba(150,150,150,0.35)',
+    valid: 'rgba(255,255,255,0.22)',
+    check: '#e57373',
+  },
+  tournament: {
+    name: 'Tournament',
+    light: '#F0D9B5',
+    dark: '#7A5230',
     selected: 'rgba(255,214,10,0.35)',
+    valid: 'rgba(255,255,255,0.22)',
+    check: '#e57373',
+  },
+  dash: {
+    name: 'Dash',
+    light: '#FFFFFF',
+    dark: '#2E2E2E',
+    selected: 'rgba(150,150,150,0.35)',
+    valid: 'rgba(255,255,255,0.22)',
+    check: '#e57373',
+  },
+  burledwood: {
+    name: 'Burled Wood',
+    light: '#E9CFA4',
+    dark: '#7A4F34',
+    selected: 'rgba(255,214,10,0.35)',
+    valid: 'rgba(255,255,255,0.22)',
+    check: '#e57373',
+  },
+  darkblue: {
+    name: 'Dark Blue',
+    light: '#DCEEFF',
+    dark: '#234A74',
+    selected: 'rgba(100,160,240,0.35)',
     valid: 'rgba(255,255,255,0.22)',
     check: '#e57373',
   },
 }
 
-// Generate SVG pieces for a given style
+// Generate all piece SVGs for a given style
 function generatePieces(style) {
   const pieces = { w: { k: '', q: '', r: '', b: '', n: '', p: '' }, b: { k: '', q: '', r: '', b: '', n: '', p: '' } }
   ;['w', 'b'].forEach(c => {
@@ -73,33 +177,15 @@ function generatePieces(style) {
   return pieces
 }
 
-export const PIECE_STYLES = {
-  classic: {
-    name: 'Classic',
-    pieces: generatePieces('classic'),
-  },
-  chesscom: {
-    name: 'Chess.com',
-    pieces: generatePieces('chesscom'),
-  },
-  wood: {
-    name: 'Wood',
-    pieces: generatePieces('wood'),
-  },
-  glass: {
-    name: 'Glass',
-    pieces: generatePieces('glass'),
-  },
-  metal: {
-    name: 'Metal',
-    pieces: generatePieces('metal'),
-  },
-}
+// Build PIECE_STYLES from STYLES definitions
+export const PIECE_STYLES = Object.fromEntries(
+  Object.entries(STYLES).map(([key, def]) => [key, { name: def.name, pieces: generatePieces(key) }])
+)
 
 export function ThemeProvider({ children }) {
   const [boardTheme, setBoardTheme] = useState(() => {
     const saved = localStorage.getItem('chessbee-board-theme')
-    return saved && BOARD_THEMES[saved] ? saved : 'golden'
+    return saved && BOARD_THEMES[saved] ? saved : 'green'
   })
 
   const [pieceStyle, setPieceStyle] = useState(() => {
@@ -115,7 +201,7 @@ export function ThemeProvider({ children }) {
     localStorage.setItem('chessbee-piece-style', pieceStyle)
   }, [pieceStyle])
 
-  const currentTheme = BOARD_THEMES[boardTheme] || BOARD_THEMES.golden
+  const currentTheme = BOARD_THEMES[boardTheme] || BOARD_THEMES.green
   const currentPieces = PIECE_STYLES[pieceStyle] || PIECE_STYLES.classic
 
   useEffect(() => {
